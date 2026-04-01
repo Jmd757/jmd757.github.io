@@ -140,22 +140,14 @@
     var sel = document.getElementById("lang-select");
     if (!sel || !api()) return;
     sel.innerHTML = "";
-    var keys = Object.keys(api().I18N);
-    var rest = keys.filter(function (k) {
-      return k !== "en";
-    });
-    rest.sort(function (a, b) {
+    var keys = Object.keys(api().I18N).slice();
+    keys.sort(function (a, b) {
       var na = LANG_NAMES[a] || a;
       var nb = LANG_NAMES[b] || b;
       return na.localeCompare(nb, "en");
     });
-    var o0 = document.createElement("option");
-    o0.value = "en";
-    o0.textContent = LANG_NAMES.en || "English";
-    o0.className = "lang-opt-en";
-    sel.appendChild(o0);
-    for (var i = 0; i < rest.length; i++) {
-      var c = rest[i];
+    for (var i = 0; i < keys.length; i++) {
+      var c = keys[i];
       var o = document.createElement("option");
       o.value = c;
       o.textContent = LANG_NAMES[c] || c;
