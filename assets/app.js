@@ -1,4 +1,4 @@
-/* Language + office pickers, URL (?lang= & ?office=), localStorage, contact link sync */
+/* Language + offices from #site-config JSON, URL params, localStorage, per-office channels */
 (function () {
   "use strict";
 
@@ -44,8 +44,58 @@
     return window.SecurityPageI18n;
   }
 
+  function normalizeOffice(o) {
+    if (!o || !o.id) return null;
+    var ch = o.channels || {};
+    var tel = String(o.tel || "").replace(/\s/g, "");
+    var waDigits = String(o.wa || "").replace(/\D/g, "");
+    if (!waDigits && tel) waDigits = tel.replace(/\D/g, "");
+    return {
+      id: String(o.id),
+      name: o.name || String(o.id),
+      tel: tel,
+      wa: waDigits,
+      channels: {
+        call: ch.call !== false,
+        sms: ch.sms !== false,
+        whatsapp: ch.whatsapp !== false,
+      },
+    };
+  }
+
+  function loadOfficesFromPage() {
+    var el = document.getElementById("site-config");
+    if (!el) return null;
+    var text = el.textContent.trim();
+    if (!text) return null;
+    try {
+      var data = JSON.parse(text);
+      if (!data.offices || !data.offices.length) return null;
+      var out = [];
+      for (var i = 0; i < data.offices.length; i++) {
+        var n = normalizeOffice(data.offices[i]);
+        if (n) out.push(n);
+      }
+      return out.length ? out : null;
+    } catch (e) {
+      console.warn("security page: #site-config JSON is invalid", e);
+      return null;
+    }
+  }
+
   function getOffices() {
-    return window.SECURITY_OFFICES || [];
+    var fromPage = loadOfficesFromPage();
+    if (fromPage && fromPage.length) return fromPage;
+    var w = window.SECURITY_OFFICES;
+    if (w && w.length) {
+      var alt = [];
+      for (var j = 0; j < w.length; j++) {
+        var n = normalizeOffice(w[j]);
+        if (n) alt.push(n);
+      }
+      return alt;
+    }
+    return [];
   }
 
   function officeById(id) {
@@ -101,7 +151,7 @@
       if (s && officeById(s)) return officeById(s).id;
     } catch (e) {}
     var first = getOffices()[0];
-    return first ? first.id : "main";
+    return first ? first.id : "";
   }
 
   function setContactLinks(office) {
@@ -134,6 +184,17 @@
     var e164el = document.getElementById("foot-e164");
     if (nat) nat.textContent = formatUKishNational(tel);
     if (e164el) e164el.textContent = tel;
+  }
+
+  function updateChannelVisibility(office) {
+    if (!office || !office.channels) return;
+    var ch = office.channels;
+    var keys = ["call", "sms", "whatsapp"];
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      var li = document.querySelector('li[data-channel="' + k + '"]');
+      if (li) li.hidden = !ch[k];
+    }
   }
 
   function buildLangSelect(current) {
@@ -173,13 +234,13 @@
     else if (list[0]) sel.value = list[0].id;
   }
 
-  var state = { lang: "en", officeId: "main" };
+  var state = { lang: "en", officeId: "" };
 
   function syncUrl() {
     try {
       var u = new URL(window.location.href);
       u.searchParams.set("lang", state.lang);
-      u.searchParams.set("office", state.officeId);
+      if (state.officeId) u.searchParams.set("office", state.officeId);
       window.history.replaceState({}, "", u.toString());
     } catch (e) {}
   }
@@ -197,6 +258,7 @@
       state.officeId = off.id;
       setContactLinks(off);
       updateFooter(off);
+      updateChannelVisibility(off);
     }
     var lsel = document.getElementById("lang-select");
     if (lsel && isValidLocale(state.lang)) lsel.value = state.lang;
@@ -205,7 +267,10 @@
   }
 
   function init() {
-    if (!window.SecurityPageI18n || !window.SECURITY_OFFICES || !window.SECURITY_OFFICES.length) {
+    if (!window.SecurityPageI18n) return;
+    var offices = getOffices();
+    if (!offices.length) {
+      console.warn("security page: add offices in #site-config JSON (see HTML comment above it).");
       return;
     }
     state.lang = resolveInitialLang();
@@ -243,6 +308,7 @@
           } catch (e) {}
           setContactLinks(o);
           updateFooter(o);
+          updateChannelVisibility(o);
           syncUrl();
         }
       });
