@@ -59,20 +59,20 @@
     for (var r = 0; r < rtl.length; r++) {
       RTL_BASE[String(rtl[r]).split("-")[0]] = 1;
     }
+    SecurityPageI18n.I18N = I18N;
+    SecurityPageI18n.langNames = LANG_NAMES;
   }
 
-  window.SecurityPageI18n = {
+  var SecurityPageI18n = {
+    I18N: I18N,
+    langNames: LANG_NAMES,
     install: install,
-    get I18N() {
-      return I18N;
-    },
-    get langNames() {
-      return LANG_NAMES;
-    },
     pickLocaleFromBrowser: pickLocale,
     applyStrings: applyStrings,
     isRTLBase: function (loc) {
       return RTL_BASE[loc.split("-")[0]];
     },
   };
+
+  window.SecurityPageI18n = SecurityPageI18n;
 })();

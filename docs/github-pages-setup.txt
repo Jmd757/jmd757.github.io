@@ -15,6 +15,8 @@ Configuration (no HTML edits needed for content)
   - content.footerNote — optional extra footer line (plain text).
 - locales/messages.json — strings per locale, langNames for the language dropdown, rtlLocales for text direction.
 
+The app loads JSON using the URL of assets/app.js to find the site root (so config/ and locales/ resolve correctly on GitHub Pages subpaths and trailing-slash edge cases).
+
 One-time steps on GitHub (after you push this repo)
 1. Create a new repository on GitHub (public repos get free Pages; private Pages may need a paid plan — check current GitHub pricing).
 2. Push your local branch (main or master) to GitHub.

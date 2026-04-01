@@ -412,9 +412,36 @@
     }
   }
 
-  function fetchJson(path) {
-    return fetch(path, { credentials: "same-origin" }).then(function (r) {
-      if (!r.ok) throw new Error(path + " " + r.status);
+  /**
+   * Directory URL where index + config/ + locales/ live. Derived from this script so fetches work on
+   * GitHub Pages (any subpath), with odd pathname shapes, and when opened as /folder vs /folder/.
+   */
+  function siteAssetBase() {
+    var lists = document.getElementsByTagName("script");
+    for (var i = lists.length - 1; i >= 0; i--) {
+      var src = lists[i].src || "";
+      if (!src) continue;
+      var lower = src.toLowerCase();
+      if (lower.indexOf("/assets/app.js") === -1 && lower.indexOf("\\assets\\app.js") === -1) continue;
+      try {
+        var u = new URL(src);
+        var path = u.pathname.replace(/\/?assets\/app\.js$/i, "/");
+        if (!path.endsWith("/")) path += "/";
+        return u.origin + path;
+      } catch (err) {}
+    }
+    try {
+      return new URL(".", window.location.href).href;
+    } catch (e2) {
+      return "";
+    }
+  }
+
+  function fetchJson(relPath) {
+    var base = siteAssetBase();
+    var url = base ? new URL(relPath, base).href : relPath;
+    return fetch(url, { credentials: "same-origin" }).then(function (r) {
+      if (!r.ok) throw new Error(url + " " + r.status);
       return r.json();
     });
   }
