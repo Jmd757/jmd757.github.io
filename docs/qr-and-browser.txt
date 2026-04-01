@@ -1,0 +1,21 @@
+QR codes and the default browser
+================================
+
+Problem: The phone shows raw HTML (tags as text) instead of a rendered page.
+
+Cause: The QR payload is often a long data:text/html,... URL. Many scanner apps and OS
+handlers treat that as text, or open it in a preview WebView that does not render HTML
+as a full document. This is not something the page itself can override.
+
+Fix: Encode an https:// URL in the QR that points to this site’s index.html on any static
+host (GitHub Pages, Netlify, Vercel, Cloudflare Pages, etc.). The browser then loads the
+page with Content-Type: text/html and renders it normally.
+
+Avoid: raw.githubusercontent.com/.../index.html — GitHub often serves .html as text/plain,
+which can still look like “source” in some clients.
+
+Optional: Use a short URL (bit.ly, etc.) that redirects to your https:// page — smallest
+QR, same browser behavior.
+
+Scanner setting: If links still open inside the QR app, enable “open in browser” /
+“Chrome” / “Safari” in that app’s settings.

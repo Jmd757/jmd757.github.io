@@ -1,0 +1,22 @@
+GitHub Pages setup for this project
+====================================
+
+What was added in the repo
+- .nojekyll — disables Jekyll so GitHub serves plain static files (also used in the deploy bundle).
+- .github/workflows/pages.yml — builds a tiny _site folder (index.html only) and deploys via GitHub Actions.
+
+One-time steps on GitHub (after you push this repo)
+1. Create a new repository on GitHub (public repos get free Pages; private Pages may need a paid plan — check current GitHub pricing).
+2. Push your local branch (main or master) to GitHub.
+3. Open the repo on GitHub → Settings → Pages.
+4. Under "Build and deployment", set Source to "GitHub Actions" (not "Deploy from a branch").
+5. Open the Actions tab; the "Deploy GitHub Pages" workflow should run on the push. If it is the first time, approve Pages if GitHub prompts for it.
+
+Your live URL
+- Project site (repo named e.g. Security-Reporting-QR-Page):
+  https://<your-username>.github.io/Security-Reporting-QR-Page/
+- Put that URL (or /index.html) in the QR code.
+
+Optional: deploy from a branch instead of Actions
+- Settings → Pages → Source: Deploy from branch → main (or master) → / (root).
+- Ensure .nojekyll exists at the repo root (it does). The workflow is then unnecessary but harmless.

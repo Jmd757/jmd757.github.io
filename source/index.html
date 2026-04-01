@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security reporting (source)</title>
+  <!--
+    This is the editable source. Root index.html is minified for copying to static hosts.
+
+    QR CODE — USE HTTPS, NOT data:
+    Many phones show raw HTML (or plain text) for data:text/html,... because the scanner
+    hands the string to a viewer instead of the system browser. There is no reliable HTML
+    trick to force the default browser for a data: URL.
+
+    Put this in the QR instead: https://your-domain/path/index.html (deploy root index.html
+    to GitHub Pages, Netlify, Vercel, Cloudflare Pages, S3 website, etc.). The server must
+    send Content-Type: text/html (included configs in this repo for common hosts).
+
+    If the QR app opens links inside its own preview, use the app setting to open in
+    Chrome / Safari / “external browser”.
+
+    CONFIGURATION
+    - Phone: E.164 in tel: and sms: (fictional +15550199).
+    - SMS body: change the query string after body= (URL-encoded).
+    - Teams: users= must be a valid Entra UPN.
+  -->
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --text: #e8eaed;
+      --muted: #9aa0a6;
+      --call: #1a73e8;
+      --sms: #188038;
+      --video: #6264a7;
+      --focus: #fbbc04;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8f9fa;
+        --surface: #fff;
+        --text: #202124;
+        --muted: #5f6368;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      line-height: 1.45;
+    }
+    main {
+      width: 100%;
+      max-width: 22rem;
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,.2);
+    }
+    h1 {
+      margin: 0 0 .35rem;
+      font-size: 1.35rem;
+      font-weight: 600;
+    }
+    p.lead {
+      margin: 0 0 1.25rem;
+      font-size: .9rem;
+      color: var(--muted);
+    }
+    ul.actions {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+    .actions a {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: .9rem 1rem;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      transition: transform .05s ease, filter .15s ease;
+    }
+    .actions a:active { transform: scale(.98); }
+    .actions a:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .actions a[href^="tel"] { background: var(--call); }
+    .actions a[href^="sms"] { background: var(--sms); }
+    .actions a[href*="teams.microsoft.com"] { background: var(--video); }
+    .actions a:hover { filter: brightness(1.08); }
+    footer {
+      margin-top: 1rem;
+      font-size: .75rem;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Security reporting</h1>
+    <p class="lead">Choose an action. Your phone will open the dialer, messages app, or Microsoft Teams.</p>
+    <ul class="actions">
+      <li>
+        <a href="tel:+15550199">Call security office</a>
+      </li>
+      <li>
+        <a href="sms:+15550199?body=Security%20alert%20%E2%80%93%20please%20respond.">Send text alert to security</a>
+      </li>
+      <li>
+        <a href="https://teams.microsoft.com/l/call/0/0?users=security.desk@contoso.com&amp;withVideo=true" target="_blank" rel="noopener noreferrer">Video call security (Teams)</a>
+      </li>
+    </ul>
+    <footer>Placeholder numbers and account. Replace before production use.</footer>
+  </main>
+</body>
+</html>
