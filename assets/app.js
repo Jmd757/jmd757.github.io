@@ -1,47 +1,18 @@
-/* Language + offices from #site-config JSON, URL params, localStorage, per-office channels */
+/* config/site.json: offices, meta, content, images; locales/messages.json: i18n */
 (function () {
   "use strict";
 
   var LS_LANG = "security-page-lang";
   var LS_OFFICE = "security-page-office";
-
-  var LANG_NAMES = {
-    en: "English",
-    ar: "العربية",
-    cy: "Cymraeg",
-    da: "Dansk",
-    de: "Deutsch",
-    el: "Ελληνικά",
-    es: "Español",
-    fa: "فارسی",
-    fi: "Suomi",
-    fr: "Français",
-    he: "עברית",
-    hi: "हिन्दी",
-    hu: "Magyar",
-    id: "Bahasa Indonesia",
-    it: "Italiano",
-    ja: "日本語",
-    ko: "한국어",
-    ms: "Bahasa Melayu",
-    nl: "Nederlands",
-    no: "Norsk",
-    pl: "Polski",
-    pt: "Português",
-    ro: "Română",
-    ru: "Русский",
-    sv: "Svenska",
-    th: "ไทย",
-    tr: "Türkçe",
-    uk: "Українська",
-    vi: "Tiếng Việt",
-    cs: "Čeština",
-    "zh-CN": "简体中文",
-    "zh-TW": "繁體中文",
-  };
+  var siteJson = null;
+  var iconDefaults = null;
 
   function api() {
     return window.SecurityPageI18n;
+  }
+
+  function byId(id) {
+    return document.getElementById(id);
   }
 
   function normalizeOffice(o) {
@@ -60,32 +31,25 @@
         sms: ch.sms !== false,
         whatsapp: ch.whatsapp !== false,
       },
+      content: o.content && typeof o.content === "object" ? o.content : null,
+      contentLocales: o.contentLocales && typeof o.contentLocales === "object" ? o.contentLocales : null,
+      images: o.images && typeof o.images === "object" ? o.images : null,
     };
   }
 
-  function loadOfficesFromPage() {
-    var el = document.getElementById("site-config");
-    if (!el) return null;
-    var text = el.textContent.trim();
-    if (!text) return null;
-    try {
-      var data = JSON.parse(text);
-      if (!data.offices || !data.offices.length) return null;
-      var out = [];
-      for (var i = 0; i < data.offices.length; i++) {
-        var n = normalizeOffice(data.offices[i]);
-        if (n) out.push(n);
-      }
-      return out.length ? out : null;
-    } catch (e) {
-      console.warn("security page: #site-config JSON is invalid", e);
-      return null;
+  function loadOfficesFromSiteFile() {
+    if (!siteJson || !siteJson.offices || !siteJson.offices.length) return null;
+    var out = [];
+    for (var i = 0; i < siteJson.offices.length; i++) {
+      var n = normalizeOffice(siteJson.offices[i]);
+      if (n) out.push(n);
     }
+    return out.length ? out : null;
   }
 
   function getOffices() {
-    var fromPage = loadOfficesFromPage();
-    if (fromPage && fromPage.length) return fromPage;
+    var fromFile = loadOfficesFromSiteFile();
+    if (fromFile && fromFile.length) return fromFile;
     var w = window.SECURITY_OFFICES;
     if (w && w.length) {
       var alt = [];
@@ -158,9 +122,9 @@
     if (!office) return;
     var tel = String(office.tel || "").replace(/\s/g, "");
     var wa = String(office.wa || "").replace(/\D/g, "");
-    var call = document.getElementById("link-call");
-    var sms = document.getElementById("link-sms");
-    var waLink = document.getElementById("link-wa");
+    var call = byId("link-call");
+    var sms = byId("link-sms");
+    var waLink = byId("link-wa");
     if (call) call.href = "tel:" + tel;
     if (sms) sms.href = "sms:" + tel;
     if (waLink) waLink.href = "https://wa.me/" + wa;
@@ -180,8 +144,8 @@
   function updateFooter(office) {
     if (!office) return;
     var tel = String(office.tel || "").replace(/\s/g, "");
-    var nat = document.getElementById("foot-national");
-    var e164el = document.getElementById("foot-e164");
+    var nat = byId("foot-national");
+    var e164el = byId("foot-e164");
     if (nat) nat.textContent = formatUKishNational(tel);
     if (e164el) e164el.textContent = tel;
   }
@@ -197,28 +161,33 @@
     }
   }
 
+  function langNames() {
+    return (api() && api().langNames) || {};
+  }
+
   function buildLangSelect(current) {
-    var sel = document.getElementById("lang-select");
+    var sel = byId("lang-select");
     if (!sel || !api()) return;
     sel.innerHTML = "";
+    var names = langNames();
     var keys = Object.keys(api().I18N).slice();
     keys.sort(function (a, b) {
-      var na = LANG_NAMES[a] || a;
-      var nb = LANG_NAMES[b] || b;
+      var na = names[a] || a;
+      var nb = names[b] || b;
       return na.localeCompare(nb, "en");
     });
     for (var i = 0; i < keys.length; i++) {
       var c = keys[i];
       var o = document.createElement("option");
       o.value = c;
-      o.textContent = LANG_NAMES[c] || c;
+      o.textContent = names[c] || c;
       sel.appendChild(o);
     }
     sel.value = isValidLocale(current) ? current : "en";
   }
 
   function buildOfficeSelect(currentId) {
-    var sel = document.getElementById("office-select");
+    var sel = byId("office-select");
     if (!sel) return;
     sel.innerHTML = "";
     var list = getOffices();
@@ -246,33 +215,163 @@
   }
 
   function toggleOfficeRow() {
-    var row = document.getElementById("picker-office-row");
+    var row = byId("picker-office-row");
     if (!row) return;
     row.hidden = getOffices().length < 2;
+  }
+
+  function mergeContentLayers(office) {
+    var site = siteJson || {};
+    var base = {};
+    function assign(obj) {
+      if (!obj || typeof obj !== "object") return;
+      for (var k in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, k)) base[k] = obj[k];
+      }
+    }
+    assign(site.content);
+    var loc = state.lang;
+    if (site.contentLocales && site.contentLocales[loc]) assign(site.contentLocales[loc]);
+    if (office && office.content) assign(office.content);
+    if (office && office.contentLocales && office.contentLocales[loc]) assign(office.contentLocales[loc]);
+    return base;
+  }
+
+  function applyTextOverrides(merged) {
+    if (!merged) return;
+    for (var key in merged) {
+      if (!Object.prototype.hasOwnProperty.call(merged, key)) continue;
+      var val = merged[key];
+      if (val == null) continue;
+      var s = String(val);
+      if (s.trim() === "") continue;
+      var sel = '[data-i18n="' + key.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"]';
+      document.querySelectorAll(sel).forEach(function (el) {
+        el.textContent = s;
+      });
+      if (key === "navLabel") {
+        var nav = byId("contact-nav");
+        if (nav) nav.setAttribute("aria-label", s);
+      }
+      if (key === "pageTitle") document.title = s;
+    }
+  }
+
+  function applyMeta(meta) {
+    if (!meta || typeof meta !== "object") return;
+    var tc = meta.themeColor;
+    if (tc != null && String(tc).trim() !== "") {
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute("content", String(tc).trim());
+    }
+  }
+
+  function applyFooterNote(merged) {
+    var el = byId("foot-note");
+    if (!el) return;
+    var raw = merged && merged.footerNote;
+    if (raw == null || String(raw).trim() === "") {
+      el.textContent = "";
+      el.hidden = true;
+      return;
+    }
+    el.textContent = String(raw);
+    el.hidden = false;
+  }
+
+  function cacheIconDefaults() {
+    if (iconDefaults) return;
+    var b = byId("brand-icon-root");
+    var c = byId("action-icon-call");
+    var s = byId("action-icon-sms");
+    var w = byId("action-icon-whatsapp");
+    iconDefaults = {
+      brand: b ? b.innerHTML : "",
+      call: c ? c.innerHTML : "",
+      sms: s ? s.innerHTML : "",
+      whatsapp: w ? w.innerHTML : "",
+    };
+  }
+
+  function resolveAssetUrl(u) {
+    if (!u || String(u).trim() === "") return "";
+    try {
+      return new URL(String(u).trim(), window.location.href).href;
+    } catch (e) {
+      return String(u).trim();
+    }
+  }
+
+  function mergeImageMap(siteI, officeI) {
+    var keys = ["brand", "call", "sms", "whatsapp"];
+    var out = {};
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      var v = (officeI && officeI[k]) || (siteI && siteI[k]) || "";
+      out[k] = String(v || "").trim();
+    }
+    return out;
+  }
+
+  function setIconSlot(elId, url, fallbackHtml) {
+    var el = byId(elId);
+    if (!el) return;
+    var u = resolveAssetUrl(url);
+    if (!u) {
+      el.innerHTML = fallbackHtml || "";
+      return;
+    }
+    el.innerHTML = "";
+    var img = document.createElement("img");
+    img.src = u;
+    img.alt = "";
+    img.decoding = "async";
+    el.appendChild(img);
+  }
+
+  function applyIcons(office) {
+    cacheIconDefaults();
+    var site = siteJson || {};
+    var siteI = site.images && typeof site.images === "object" ? site.images : {};
+    var offI = office && office.images ? office.images : null;
+    var m = mergeImageMap(siteI, offI);
+    setIconSlot("brand-icon-root", m.brand, iconDefaults.brand);
+    setIconSlot("action-icon-call", m.call, iconDefaults.call);
+    setIconSlot("action-icon-sms", m.sms, iconDefaults.sms);
+    setIconSlot("action-icon-whatsapp", m.whatsapp, iconDefaults.whatsapp);
   }
 
   function applyAll() {
     api().applyStrings(state.lang);
     var off = officeById(state.officeId);
+    if (siteJson) applyMeta(siteJson.meta);
     if (off) {
       state.officeId = off.id;
       setContactLinks(off);
       updateFooter(off);
       updateChannelVisibility(off);
     }
-    var lsel = document.getElementById("lang-select");
+    var merged = mergeContentLayers(off);
+    applyTextOverrides(merged);
+    applyFooterNote(merged);
+    applyIcons(off);
+    var lsel = byId("lang-select");
     if (lsel && isValidLocale(state.lang)) lsel.value = state.lang;
-    var osel = document.getElementById("office-select");
+    var osel = byId("office-select");
     if (osel && officeById(state.officeId)) osel.value = officeById(state.officeId).id;
   }
 
   function init() {
-    if (!window.SecurityPageI18n) return;
-    var offices = getOffices();
-    if (!offices.length) {
-      console.warn("security page: add offices in #site-config JSON (see HTML comment above it).");
+    if (!api() || !Object.keys(api().I18N).length) {
+      console.warn("security page: locales not loaded (locales/messages.json).");
       return;
     }
+    var offices = getOffices();
+    if (!offices.length) {
+      console.warn("security page: add offices in config/site.json (or window.SECURITY_OFFICES).");
+      return;
+    }
+    cacheIconDefaults();
     state.lang = resolveInitialLang();
     state.officeId = resolveInitialOfficeId();
     toggleOfficeRow();
@@ -281,7 +380,7 @@
     applyAll();
     syncUrl();
 
-    var langSel = document.getElementById("lang-select");
+    var langSel = byId("lang-select");
     if (langSel) {
       langSel.addEventListener("change", function () {
         var v = langSel.value;
@@ -296,7 +395,7 @@
       });
     }
 
-    var offSel = document.getElementById("office-select");
+    var offSel = byId("office-select");
     if (offSel) {
       offSel.addEventListener("change", function () {
         var v = offSel.value;
@@ -306,18 +405,39 @@
           try {
             localStorage.setItem(LS_OFFICE, o.id);
           } catch (e) {}
-          setContactLinks(o);
-          updateFooter(o);
-          updateChannelVisibility(o);
+          applyAll();
           syncUrl();
         }
       });
     }
   }
 
+  function fetchJson(path) {
+    return fetch(path, { credentials: "same-origin" }).then(function (r) {
+      if (!r.ok) throw new Error(path + " " + r.status);
+      return r.json();
+    });
+  }
+
+  function bootstrap() {
+    if (!window.SecurityPageI18n) {
+      console.warn("security page: SecurityPageI18n missing (i18n.js).");
+      return;
+    }
+    Promise.all([fetchJson("config/site.json"), fetchJson("locales/messages.json")])
+      .then(function (pair) {
+        siteJson = pair[0];
+        SecurityPageI18n.install(pair[1]);
+        init();
+      })
+      .catch(function (e) {
+        console.warn("security page: failed to load config or locales", e);
+      });
+  }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+    document.addEventListener("DOMContentLoaded", bootstrap);
   } else {
-    init();
+    bootstrap();
   }
 })();

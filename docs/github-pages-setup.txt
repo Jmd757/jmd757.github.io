@@ -3,7 +3,17 @@ GitHub Pages setup for this project
 
 What was added in the repo
 - .nojekyll — disables Jekyll so GitHub serves plain static files (also used in the deploy bundle).
-- .github/workflows/pages.yml — copies index.html, assets/*.js (i18n, app), and .nojekyll into _site and deploys via GitHub Actions.
+- .github/workflows/pages.yml — copies index.html, assets/*.js, config/, locales/, and .nojekyll into _site and deploys via GitHub Actions.
+
+Configuration (no HTML edits needed for content)
+- config/site.json — structure:
+  - offices[] — id, name, tel, wa, optional channels. Optional per office: content, contentLocales, images (same shape as site-level, merged on top).
+  - meta.themeColor — sets the <meta name="theme-color"> value.
+  - content — optional overrides for any UI key that matches data-i18n (e.g. lead, eyebrow, heading, callTitle, pageTitle, navLabel). Non-empty values replace locales/messages.json for every language.
+  - contentLocales — e.g. { "de": { "lead": "…" } } overrides for that locale only (after merging site content).
+  - images — optional URLs (relative to the page or absolute): brand, call, sms, whatsapp. Empty string keeps the built-in SVG. Per-office images override site images when set.
+  - content.footerNote — optional extra footer line (plain text).
+- locales/messages.json — strings per locale, langNames for the language dropdown, rtlLocales for text direction.
 
 One-time steps on GitHub (after you push this repo)
 1. Create a new repository on GitHub (public repos get free Pages; private Pages may need a paid plan — check current GitHub pricing).

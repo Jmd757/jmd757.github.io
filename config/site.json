@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "themeColor": "#0c1222"
+  },
+  "offices": [
+    {
+      "id": "front",
+      "name": "Front Entrance",
+      "tel": "+447599885343",
+      "wa": "447599885343",
+      "channels": { "call": true, "sms": true, "whatsapp": true }
+    },
+    {
+      "id": "asrs",
+      "name": "ASRS Entrance",
+      "tel": "+447599885343",
+      "wa": "447599885343",
+      "channels": { "call": true, "sms": true, "whatsapp": true }
+    }
+  ]
+}

@@ -32,6 +32,7 @@ jobs:
           cp index.html _site/
           cp .nojekyll _site/
           cp assets/*.js _site/assets/
+          cp -r config locales _site/
 
       - uses: actions/configure-pages@v4
 
