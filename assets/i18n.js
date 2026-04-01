@@ -15,6 +15,8 @@
       smsDesc: "SMS with an empty draft, ready to type",
       waTitle: "WhatsApp",
       waDesc: "Message or call from the chat screen",
+      labelLanguage: "Language",
+      labelOffice: "Security office",
     },
     es: {
       pageTitle: "Central de seguridad · Contacto",
@@ -447,24 +449,33 @@
     return "en";
   }
 
-  function apply() {
-    var loc = pickLocale();
+  function applyStrings(loc) {
     var t = I18N[loc] || I18N.en;
+    var te = I18N[loc] || {};
+    var tEn = I18N.en;
     var base = loc.split("-")[0];
     document.documentElement.lang = loc;
     document.documentElement.dir = RTL_BASE[base] ? "rtl" : "ltr";
     document.title = t.pageTitle;
     document.querySelectorAll("[data-i18n]").forEach(function (el) {
       var k = el.getAttribute("data-i18n");
-      if (k && t[k]) el.textContent = t[k];
+      if (!k) return;
+      var val = te[k] || tEn[k];
+      if (val) el.textContent = val;
     });
     var nav = document.getElementById("contact-nav");
-    if (nav && t.navLabel) nav.setAttribute("aria-label", t.navLabel);
+    if (nav) {
+      var navLab = te.navLabel || t.navLabel;
+      if (navLab) nav.setAttribute("aria-label", navLab);
+    }
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", apply);
-  } else {
-    apply();
-  }
+  window.SecurityPageI18n = {
+    I18N: I18N,
+    pickLocaleFromBrowser: pickLocale,
+    applyStrings: applyStrings,
+    isRTLBase: function (loc) {
+      return RTL_BASE[loc.split("-")[0]];
+    },
+  };
 })();
