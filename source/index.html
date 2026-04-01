@@ -20,12 +20,9 @@
     Chrome / Safari / “external browser”.
 
     CONFIGURATION
-    - Phone: E.164 in tel: and sms: (fictional +15550199).
+    - Number: UK 07599885343 → E.164 tel/sms +447599885343; wa.me uses 447599885343 (no +).
     - SMS body: change the query string after body= (URL-encoded).
-    - WhatsApp: https://wa.me/<digits> — full country code + number, digits only (no +).
-      Optional ?text= prefills the compose box (URL-encoded). There is no public wa.me link
-      that starts a video call automatically; the user opens WhatsApp (app or web) and can
-      start video from the chat. Same placeholder number as phone/SMS for demo use.
+    - WhatsApp: optional ?text= prefills the compose box. User starts video from the chat.
   -->
   <style>
     :root {
@@ -122,16 +119,16 @@
     <p class="lead">Choose an action. Phone and SMS use the dialer and messages app; WhatsApp opens a chat with security—start a video call from there if you need video.</p>
     <ul class="actions">
       <li>
-        <a href="tel:+15550199">Call security office</a>
+        <a href="tel:+447599885343">Call security office</a>
       </li>
       <li>
-        <a href="sms:+15550199?body=Security%20alert%20%E2%80%93%20please%20respond.">Send text alert to security</a>
+        <a href="sms:+447599885343?body=Security%20alert%20%E2%80%93%20please%20respond.">Send text alert to security</a>
       </li>
       <li>
-        <a href="https://wa.me/15550199?text=Security%20video%20call%20request" target="_blank" rel="noopener noreferrer">WhatsApp security (then video in app)</a>
+        <a href="https://wa.me/447599885343?text=Security%20video%20call%20request" target="_blank" rel="noopener noreferrer">WhatsApp security (then video in app)</a>
       </li>
     </ul>
-    <footer>Placeholder number. Replace before production use.</footer>
+    <footer>07599885343 · international +44 7599 885343</footer>
   </main>
 </body>
 </html>
