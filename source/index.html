@@ -22,7 +22,9 @@
     CONFIGURATION
     - Number: UK 07599885343 → E.164 tel/sms +447599885343; wa.me uses 447599885343 (no +).
     - SMS body: change the query string after body= (URL-encoded).
-    - WhatsApp: optional ?text= prefills the compose box. User starts video from the chat.
+    - WhatsApp: Meta does not publish a link that starts a voice/video call; only a chat opens.
+      Script tries whatsapp://send?phone=… on mobile first (empty message, ready to type or call);
+      falls back to https://wa.me/… after 700ms if the app did not open.
   -->
   <style>
     :root {
@@ -116,19 +118,36 @@
 <body>
   <main>
     <h1>Security reporting</h1>
-    <p class="lead">Choose an action. Phone and SMS use the dialer and messages app; WhatsApp opens a chat with security—start a video call from there if you need video.</p>
+    <p class="lead">Phone and SMS open with empty fields ready to type. WhatsApp opens the chat in the app (fastest on phones we can do); tap the phone or video icon there to call—there is no official one-tap “start call” link.</p>
     <ul class="actions">
       <li>
         <a href="tel:+447599885343">Call security office</a>
       </li>
       <li>
-        <a href="sms:+447599885343?body=Security%20alert%20%E2%80%93%20please%20respond.">Send text alert to security</a>
+        <a href="sms:+447599885343">Send text alert to security</a>
       </li>
       <li>
-        <a href="https://wa.me/447599885343?text=Security%20video%20call%20request" target="_blank" rel="noopener noreferrer">WhatsApp security (then video in app)</a>
+        <a href="https://wa.me/447599885343" id="wa-sec" rel="noopener noreferrer">WhatsApp security (open chat — tap call in app)</a>
       </li>
     </ul>
     <footer>07599885343 · international +44 7599 885343</footer>
   </main>
+  <script>
+    (function () {
+      var a = document.getElementById("wa-sec");
+      if (!a) return;
+      var waMe = "https://wa.me/447599885343";
+      var waApp = "whatsapp://send?phone=447599885343";
+      a.addEventListener("click", function (e) {
+        if (/iPhone|Android|iPad|iPod/i.test(navigator.userAgent || "")) {
+          e.preventDefault();
+          window.location.href = waApp;
+          setTimeout(function () {
+            window.location.href = waMe;
+          }, 700);
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
