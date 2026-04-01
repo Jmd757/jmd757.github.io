@@ -20,10 +20,9 @@
     Chrome / Safari / “external browser”.
 
     CONFIGURATION
-    - Phone/SMS: UK 07599885343 → E.164 +447599885343.
-    - WhatsApp: group invite https://chat.whatsapp.com/… (see anchor href). Opens join flow in app
-      or browser; after joining, use the group’s voice/video call controls. Invite links can be
-      revoked from WhatsApp group settings—update the href if you create a new invite.
+    - UK 07599885343 → E.164 +447599885343 for tel/sms; WhatsApp click-to-chat: wa.me/447599885343
+      (digits only, no +). Opens a 1:1 chat; user taps the call icons for voice/video—no web link
+      starts a call automatically.
   -->
   <style>
     :root {
@@ -104,7 +103,7 @@
     }
     .actions a[href^="tel"] { background: var(--call); }
     .actions a[href^="sms"] { background: var(--sms); }
-    .actions a[href*="whatsapp.com"] { background: var(--whatsapp); }
+    .actions a[href*="wa.me"] { background: var(--whatsapp); }
     .actions a:hover { filter: brightness(1.08); }
     footer {
       margin-top: 1rem;
@@ -117,7 +116,7 @@
 <body>
   <main>
     <h1>Security reporting</h1>
-    <p class="lead">Phone and SMS open with empty fields ready to type. WhatsApp opens your security group invite—after you join, start a group voice or video call from the group chat (no one-tap call link exists for the web).</p>
+    <p class="lead">Phone and SMS open with empty fields ready to type. WhatsApp opens a chat with this number; use the voice or video buttons in the chat to call (WhatsApp does not offer a one-tap “start call” link from the web).</p>
     <ul class="actions">
       <li>
         <a href="tel:+447599885343">Call security office</a>
@@ -126,10 +125,10 @@
         <a href="sms:+447599885343">Send text alert to security</a>
       </li>
       <li>
-        <a href="https://chat.whatsapp.com/GFyAHnKPgjE9kMhv1HgOZk?mode=gi_t" target="_blank" rel="noopener noreferrer">WhatsApp security group</a>
+        <a href="https://wa.me/447599885343" rel="noopener noreferrer">WhatsApp security</a>
       </li>
     </ul>
-    <footer>07599885343 · international +44 7599 885343 · WhatsApp group invite in button above</footer>
+    <footer>07599885343 · international +44 7599 885343</footer>
   </main>
 </body>
 </html>
