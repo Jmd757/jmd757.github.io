@@ -1,4 +1,4 @@
-# Publishes only index.html (+ .nojekyll) to GitHub Pages.
+# Publishes index.html, assets/i18n.js, and .nojekyll to GitHub Pages.
 # Repo → Settings → Pages → Build: GitHub Actions (not "Deploy from branch").
 
 name: Deploy GitHub Pages
@@ -28,9 +28,10 @@ jobs:
 
       - name: Prepare site
         run: |
-          mkdir -p _site
+          mkdir -p _site/assets
           cp index.html _site/
           cp .nojekyll _site/
+          cp assets/i18n.js _site/assets/
 
       - uses: actions/configure-pages@v4
 
