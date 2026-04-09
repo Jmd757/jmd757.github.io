@@ -7,7 +7,7 @@ What was added in the repo
 
 Configuration (no HTML edits needed for content)
 - config/site.json — structure:
-  - lines[] — each line: id, name, tel (E.164, e.g. +442477092465), optional display (shown under the title, e.g. national format), optional subtitle (replaces display when set).
+  - lines[] — each line: id, name, tel (E.164, e.g. +442477092465), optional display (large number text, e.g. national format), optional subtitle (small line under the number instead of “Tap to call”).
   - meta.themeColor — sets the <meta name="theme-color"> value.
   - content — optional overrides for any UI key that matches data-i18n (e.g. lead, eyebrow, heading, pageTitle, navLabel). Non-empty values replace locales/messages.json for every language.
   - contentLocales — e.g. { "de": { "lead": "…" } } overrides for that locale only (after merging site content).
@@ -18,6 +18,8 @@ Configuration (no HTML edits needed for content)
 The app loads JSON using the URL of assets/app.js to find the site root (so config/ and locales/ resolve correctly on GitHub Pages subpaths and trailing-slash edge cases).
 
 Optional JS override: window.SECURITY_LINES — same shape as lines[] if you cannot use site.json.
+
+Resilience: index.html includes a #site-bootstrap JSON block and visible tel: links in the markup. If fetch to config/site.json fails, those defaults still apply; keep them in sync when you change numbers.
 
 One-time steps on GitHub (after you push this repo)
 1. Create a new repository on GitHub (public repos get free Pages; private Pages may need a paid plan — check current GitHub pricing).

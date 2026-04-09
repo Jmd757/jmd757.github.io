@@ -3,45 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0c1222">
-  <title>Security reporting (source)</title>
+  <meta name="theme-color" content="#1a1d24">
+  <title>Emergency lines (source)</title>
   <!--
-    Editable source — copy changes into root index.html for GitHub Pages.
-
-    Per-site setup: config/site.json (lines: id, name, tel, optional display/subtitle) and
-    locales/messages.json. Phone-only UI; SMS/WhatsApp removed.
-
-    QR: https:// to hosted page. ?lang=  See docs/qr-and-browser.txt.
+    Editable source — copy into root index.html for GitHub Pages.
+    Keep #site-bootstrap JSON in sync with config/site.json (lines + meta).
+    Static <nav> cards are the no-JS fallback; app.js rebuilds from JSON when loaded.
   -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      color-scheme: dark light;
-      --font: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-      --bg-deep: #070b14;
-      --bg-mid: #0c1222;
-      --card: rgba(20, 28, 48, 0.85);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --card-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
-      --text: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --accent-bar: linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
-      --call: #2563eb;
-      --call-soft: rgba(37, 99, 235, 0.2);
+      color-scheme: dark;
+      --bg: #12151c;
+      --surface: #1c212b;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --security: #38bdf8;
+      --security-bg: rgba(56, 189, 248, 0.12);
+      --emergency: #fb7185;
+      --emergency-bg: rgba(251, 113, 133, 0.12);
       --focus: #fbbf24;
+      --font: "Instrument Sans", system-ui, sans-serif;
     }
     @media (prefers-color-scheme: light) {
       :root {
-        --bg-deep: #e8eef5;
-        --bg-mid: #f1f5f9;
-        --card: rgba(255, 255, 255, 0.92);
-        --card-border: rgba(15, 23, 42, 0.08);
-        --card-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.12);
-        --text: #0f172a;
-        --text-secondary: #64748b;
-        --call-soft: rgba(37, 99, 235, 0.12);
+        color-scheme: light;
+        --bg: #f4f4f5;
+        --surface: #ffffff;
+        --border: rgba(9, 9, 11, 0.1);
+        --text: #18181b;
+        --muted: #71717a;
+        --security-bg: rgba(2, 132, 199, 0.1);
+        --emergency-bg: rgba(225, 29, 72, 0.08);
       }
     }
     *, *::before, *::after { box-sizing: border-box; }
@@ -49,26 +45,45 @@
       margin: 0;
       min-height: 100dvh;
       font-family: var(--font);
-      font-size: 1rem;
-      line-height: 1.5;
+      font-size: 1.0625rem;
+      line-height: 1.45;
       color: var(--text);
-      background-color: var(--bg-mid);
-      background-image:
-        radial-gradient(ellipse 100% 60% at 50% -10%, rgba(59, 130, 246, 0.18), transparent 55%),
-        radial-gradient(ellipse 70% 45% at 100% 0%, rgba(6, 182, 212, 0.1), transparent 50%),
-        radial-gradient(ellipse 60% 40% at 0% 100%, rgba(16, 185, 129, 0.08), transparent 50%),
-        linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 45%, var(--bg-mid) 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
+      background: var(--bg);
       -webkit-font-smoothing: antialiased;
     }
-    .shell {
-      position: relative;
-      width: 100%;
-      max-width: 26rem;
+    .page {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      max-width: 28rem;
+      margin: 0 auto;
+      padding: 1.25rem 1.25rem 2rem;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      min-height: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    html[dir="rtl"] .top-bar {
+      justify-content: flex-start;
+    }
+    .lang-select {
+      font: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.6rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      max-width: 9rem;
+    }
+    .lang-select:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
     }
     .visually-hidden {
       position: absolute;
@@ -81,263 +96,165 @@
       white-space: nowrap;
       border: 0;
     }
-    .lang-float {
-      position: absolute;
-      top: 0;
-      right: 0;
-      z-index: 4;
+    .intro {
+      margin-bottom: 1.75rem;
     }
-    html[dir="rtl"] .lang-float {
-      right: auto;
-      left: 0;
-    }
-    .lang-select-compact {
-      font-family: inherit;
+    .intro-kicker {
+      margin: 0 0 0.35rem;
       font-size: 0.6875rem;
-      font-weight: 500;
-      padding: 0.2rem 1.35rem 0.2rem 0.3rem;
-      max-width: min(7.5rem, 42vw);
-      line-height: 1.25;
-      border-radius: 0.35rem;
-      border: 1px solid var(--card-border);
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text);
-      cursor: pointer;
-    }
-    @media (prefers-color-scheme: light) {
-      .lang-select-compact {
-        background: rgba(255, 255, 255, 0.95);
-      }
-    }
-    .lang-select-compact:focus-visible {
-      outline: 2px solid var(--focus);
-      outline-offset: 1px;
-    }
-    .card {
-      position: relative;
-      border-radius: 1.25rem;
-      padding: 0;
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      box-shadow: var(--card-shadow);
-      backdrop-filter: blur(12px);
-      overflow: hidden;
-    }
-    .card::before {
-      content: "";
-      display: block;
-      height: 4px;
-      background: var(--accent-bar);
-    }
-    .card-inner {
-      padding: 1.6rem 4.75rem 1.5rem 1.5rem;
-    }
-    html[dir="rtl"] .card-inner {
-      padding: 1.6rem 1.5rem 1.5rem 4.75rem;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 0.875rem;
-      margin-bottom: 1.25rem;
-    }
-    .brand-icon {
-      flex-shrink: 0;
-      width: 2.75rem;
-      height: 2.75rem;
-      padding: 0.5rem;
-      border-radius: 0.875rem;
-      background: linear-gradient(145deg, rgba(59, 130, 246, 0.25), rgba(6, 182, 212, 0.15));
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #7dd3fc;
-    }
-    @media (prefers-color-scheme: light) {
-      .brand-icon {
-        background: linear-gradient(145deg, rgba(37, 99, 235, 0.12), rgba(6, 182, 212, 0.1));
-        border-color: rgba(15, 23, 42, 0.08);
-        color: #2563eb;
-      }
-    }
-    .brand-icon svg,
-    .brand-icon img {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-    .brand-icon img {
-      object-fit: contain;
-    }
-    .brand-text .eyebrow {
-      margin: 0;
-      font-size: 0.6875rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-    }
-    .brand-text h1 {
-      margin: 0.2rem 0 0;
-      font-size: 1.5rem;
       font-weight: 700;
-      letter-spacing: -0.02em;
-      line-height: 1.2;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
     }
-    .lead {
-      margin: 0 0 1.25rem;
-      font-size: 0.9375rem;
-      color: var(--text-secondary);
-      line-height: 1.55;
+    .intro-title {
+      margin: 0 0 0.5rem;
+      font-size: clamp(1.65rem, 5.5vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
     }
-    .actions {
-      list-style: none;
+    .intro-lead {
       margin: 0;
-      padding: 0;
+      font-size: 0.9375rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .line-grid {
       display: flex;
       flex-direction: column;
-      gap: 0.625rem;
-    }
-    .action {
-      display: flex;
-      align-items: center;
       gap: 1rem;
-      padding: 1rem 1.125rem;
-      border-radius: 0.875rem;
+      flex: 1;
+    }
+    .line-slot {
+      margin: 0;
+    }
+    .dial-card {
+      display: block;
       text-decoration: none;
       color: inherit;
-      border: 1px solid var(--card-border);
-      background: rgba(255, 255, 255, 0.03);
-      transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+      padding: 1.25rem 1.35rem;
+      border-radius: 1rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
     }
     @media (prefers-color-scheme: light) {
-      .action {
-        background: rgba(15, 23, 42, 0.03);
+      .dial-card {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
       }
     }
-    .action:hover {
-      border-color: rgba(255, 255, 255, 0.14);
-      background: rgba(255, 255, 255, 0.06);
+    .dial-card:hover {
+      transform: translateY(-1px);
     }
-    @media (prefers-color-scheme: light) {
-      .action:hover {
-        border-color: rgba(15, 23, 42, 0.12);
-        background: rgba(15, 23, 42, 0.04);
-      }
+    .dial-card:active {
+      transform: translateY(0);
     }
-    .action:active {
-      transform: scale(0.99);
-    }
-    .action:focus-visible {
+    .dial-card:focus-visible {
       outline: 2px solid var(--focus);
-      outline-offset: 2px;
+      outline-offset: 3px;
     }
-    .action-icon {
-      flex-shrink: 0;
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .dial-card--security {
+      border-left: 4px solid var(--security);
+      background: linear-gradient(135deg, var(--surface) 0%, var(--security-bg) 100%);
     }
-    .action-icon svg,
-    .action-icon img {
-      width: 1.25rem;
-      height: 1.25rem;
+    .dial-card--medical-emergency {
+      border-left: 4px solid var(--emergency);
+      background: linear-gradient(135deg, var(--surface) 0%, var(--emergency-bg) 100%);
     }
-    .action-icon img {
+    .dial-card--other {
+      border-left: 4px solid var(--muted);
+      background: var(--surface);
+    }
+    .dial-card__label {
       display: block;
-      object-fit: contain;
-    }
-    .action-call .action-icon {
-      background: var(--call-soft);
-      color: var(--call);
-    }
-    .action-body {
-      flex: 1;
-      min-width: 0;
-      text-align: start;
-    }
-    .action-title {
-      display: block;
-      font-weight: 600;
-      font-size: 1rem;
-      letter-spacing: -0.01em;
-    }
-    .action-desc {
-      display: block;
-      margin-top: 0.15rem;
       font-size: 0.8125rem;
-      color: var(--text-secondary);
-      font-weight: 400;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
     }
-    .action-arrow {
-      flex-shrink: 0;
-      font-size: 1.125rem;
-      color: var(--text-secondary);
-      opacity: 0.7;
+    .dial-card__num {
+      display: block;
+      font-size: clamp(1.5rem, 6vw, 1.85rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+    }
+    .dial-card__hint {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
     }
     .foot {
-      margin-top: 1.375rem;
+      margin-top: 2rem;
       padding-top: 1.25rem;
-      border-top: 1px solid var(--card-border);
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      text-align: center;
-      line-height: 1.45;
+      border-top: 1px solid var(--border);
     }
     .foot-note {
       margin: 0;
-      font-size: 0.6875rem;
+      font-size: 0.75rem;
+      color: var(--muted);
       line-height: 1.4;
-      color: var(--text-secondary);
     }
-    html[dir="rtl"] .brand {
-      flex-direction: row-reverse;
+    html[dir="rtl"] .dial-card--security {
+      border-left: none;
+      border-right: 4px solid var(--security);
     }
-    html[dir="rtl"] .action {
-      flex-direction: row-reverse;
+    html[dir="rtl"] .dial-card--medical-emergency {
+      border-left: none;
+      border-right: 4px solid var(--emergency);
     }
-    html[dir="rtl"] .action-body {
-      text-align: right;
-    }
-    html[dir="rtl"] .action-arrow {
-      transform: scaleX(-1);
-    }
-    html[dir="rtl"] .lang-select-compact {
-      text-align: right;
+    html[dir="rtl"] .dial-card--other {
+      border-left: none;
+      border-right: 4px solid var(--muted);
     }
   </style>
+  <script type="application/json" id="site-bootstrap">
+  {"meta":{"themeColor":"#1a1d24"},"lines":[{"id":"security","name":"Security","tel":"+442477092465","display":"02477 092465"},{"id":"medical-emergency","name":"Medical emergency","tel":"+442477092474","display":"02477 092474"}]}
+  </script>
 </head>
 <body>
-  <!-- Lines: config/site.json · UI languages: locales/messages.json (see repo docs) -->
-  <div class="shell">
-    <div class="lang-float">
+  <div class="page">
+    <header class="top-bar">
       <label class="visually-hidden" for="lang-select"><span data-i18n="labelLanguage">Language</span></label>
-      <select id="lang-select" class="lang-select-compact" autocomplete="off"></select>
+      <select id="lang-select" class="lang-select" autocomplete="off" aria-label="Language"></select>
+    </header>
+
+    <div class="intro">
+      <p class="intro-kicker" data-i18n="eyebrow">Contact</p>
+      <h1 class="intro-title" data-i18n="heading">Phone numbers</h1>
+      <p class="intro-lead" data-i18n="lead">Tap a line to start a voice call on your phone.</p>
     </div>
-    <main class="card" role="main">
-      <div class="card-inner">
-        <div class="brand">
-          <div class="brand-icon" id="brand-icon-root" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </div>
-          <div class="brand-text">
-            <p class="eyebrow" data-i18n="eyebrow">Contact</p>
-            <h1 data-i18n="heading">Phone numbers</h1>
-          </div>
-        </div>
-        <p class="lead" data-i18n="lead">Tap the line you need. Your device will start a normal voice call.</p>
-        <nav id="contact-nav" aria-label="Phone lines">
-          <ul id="lines-list" class="actions"></ul>
-        </nav>
-        <footer class="foot">
-          <p id="foot-note" class="foot-note" hidden></p>
-        </footer>
-      </div>
+
+    <main id="main-lines" role="main">
+      <nav id="contact-nav" class="line-grid" aria-label="Phone lines">
+        <article class="line-slot" data-line-id="security">
+          <a class="dial-card dial-card--security" href="tel:+442477092465">
+            <span class="dial-card__label">Security</span>
+            <span class="dial-card__num">02477 092465</span>
+            <span class="dial-card__hint" data-i18n="tapToCall">Tap to call</span>
+          </a>
+        </article>
+        <article class="line-slot" data-line-id="medical-emergency">
+          <a class="dial-card dial-card--medical-emergency" href="tel:+442477092474">
+            <span class="dial-card__label">Medical emergency</span>
+            <span class="dial-card__num">02477 092474</span>
+            <span class="dial-card__hint" data-i18n="tapToCall">Tap to call</span>
+          </a>
+        </article>
+      </nav>
     </main>
+
+    <footer class="foot">
+      <p id="foot-note" class="foot-note" hidden></p>
+    </footer>
   </div>
+
   <script src="assets/i18n.js" defer></script>
   <script src="assets/app.js" defer></script>
 </body>

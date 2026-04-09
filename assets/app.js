@@ -1,13 +1,9 @@
-/* config/site.json: lines (phone only), meta, content, images; locales/messages.json: i18n */
+/* Loads config/site.json + locales; falls back to #site-bootstrap and static HTML in #contact-nav */
 (function () {
   "use strict";
 
-  var LS_LANG = "security-page-lang";
+  var LS_LANG = "emergency-lines-lang";
   var siteJson = null;
-  var iconDefaults = null;
-
-  var PHONE_ICON_SVG =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
 
   function api() {
     return window.SecurityPageI18n;
@@ -17,22 +13,30 @@
     return document.getElementById(id);
   }
 
+  function loadEmbeddedSite() {
+    var el = byId("site-bootstrap");
+    if (!el) return null;
+    try {
+      return JSON.parse(el.textContent.trim());
+    } catch (e) {
+      return null;
+    }
+  }
+
   function normalizeLine(o) {
     if (!o || !o.id) return null;
     var tel = String(o.tel || "").replace(/\s/g, "");
+    if (!tel) return null;
     return {
       id: String(o.id),
-      name: o.name || String(o.id),
+      name: (o.name && String(o.name).trim()) || String(o.id),
       tel: tel,
       display: o.display != null && String(o.display).trim() !== "" ? String(o.display).trim() : "",
       subtitle: o.subtitle != null && String(o.subtitle).trim() !== "" ? String(o.subtitle).trim() : "",
-      content: o.content && typeof o.content === "object" ? o.content : null,
-      contentLocales: o.contentLocales && typeof o.contentLocales === "object" ? o.contentLocales : null,
-      images: o.images && typeof o.images === "object" ? o.images : null,
     };
   }
 
-  function loadLinesFromSite() {
+  function loadLinesFromSiteJson() {
     if (!siteJson || !siteJson.lines || !siteJson.lines.length) return null;
     var out = [];
     for (var i = 0; i < siteJson.lines.length; i++) {
@@ -42,19 +46,50 @@
     return out.length ? out : null;
   }
 
+  function getLinesFromDom() {
+    var grid = byId("contact-nav");
+    if (!grid) return [];
+    var slots = grid.querySelectorAll(".line-slot[data-line-id]");
+    var out = [];
+    for (var i = 0; i < slots.length; i++) {
+      var slot = slots[i];
+      var id = slot.getAttribute("data-line-id");
+      var a = slot.querySelector("a[href^=\"tel:\"]");
+      if (!id || !a) continue;
+      var href = a.getAttribute("href") || "";
+      var tel = href.indexOf("tel:") === 0 ? href.slice(4).replace(/\s/g, "") : "";
+      var label = slot.querySelector(".dial-card__label");
+      var num = slot.querySelector(".dial-card__num");
+      var n = normalizeLine({
+        id: id,
+        name: label ? label.textContent.trim() : id,
+        tel: tel,
+        display: num ? num.textContent.trim() : "",
+      });
+      if (n) out.push(n);
+    }
+    return out;
+  }
+
   function getLines() {
-    var fromFile = loadLinesFromSite();
+    var fromFile = loadLinesFromSiteJson();
     if (fromFile && fromFile.length) return fromFile;
-    var w = window.SECURITY_LINES;
-    if (w && w.length) {
+    if (window.SECURITY_LINES && window.SECURITY_LINES.length) {
       var alt = [];
-      for (var j = 0; j < w.length; j++) {
-        var n = normalizeLine(w[j]);
+      for (var j = 0; j < window.SECURITY_LINES.length; j++) {
+        var n = normalizeLine(window.SECURITY_LINES[j]);
         if (n) alt.push(n);
       }
-      return alt;
+      if (alt.length) return alt;
     }
-    return [];
+    return getLinesFromDom();
+  }
+
+  function dialCardClassForId(lineId) {
+    var id = String(lineId || "");
+    if (id === "security") return "dial-card dial-card--security";
+    if (id === "medical-emergency") return "dial-card dial-card--medical-emergency";
+    return "dial-card dial-card--other";
   }
 
   function formatNationalDisplay(tel) {
@@ -68,15 +103,7 @@
         return "0" + n.slice(0, 4) + " " + n.slice(4);
       }
     }
-    return tel;
-  }
-
-  function lineDescription(L, tapHint) {
-    if (L.subtitle) return L.subtitle;
-    if (L.display) return L.display;
-    var fmt = formatNationalDisplay(L.tel);
-    if (fmt && fmt !== L.tel) return fmt;
-    return tapHint || L.tel || "";
+    return "";
   }
 
   function parseParams() {
@@ -119,15 +146,11 @@
     } catch (e) {}
   }
 
-  function langNames() {
-    return (api() && api().langNames) || {};
-  }
-
   function buildLangSelect(current) {
     var sel = byId("lang-select");
     if (!sel || !api()) return;
     sel.innerHTML = "";
-    var names = langNames();
+    var names = api().langNames || {};
     var keys = Object.keys(api().I18N).slice();
     keys.sort(function (a, b) {
       var na = names[a] || a;
@@ -201,47 +224,6 @@
     el.hidden = false;
   }
 
-  function cacheIconDefaults() {
-    if (iconDefaults) return;
-    var b = byId("brand-icon-root");
-    iconDefaults = {
-      brand: b ? b.innerHTML : "",
-    };
-  }
-
-  function resolveAssetUrl(u) {
-    if (!u || String(u).trim() === "") return "";
-    try {
-      return new URL(String(u).trim(), window.location.href).href;
-    } catch (e) {
-      return String(u).trim();
-    }
-  }
-
-  function setIconSlot(elId, url, fallbackHtml) {
-    var el = byId(elId);
-    if (!el) return;
-    var u = resolveAssetUrl(url);
-    if (!u) {
-      el.innerHTML = fallbackHtml || "";
-      return;
-    }
-    el.innerHTML = "";
-    var img = document.createElement("img");
-    img.src = u;
-    img.alt = "";
-    img.decoding = "async";
-    el.appendChild(img);
-  }
-
-  function applyBrandIcon() {
-    cacheIconDefaults();
-    var site = siteJson || {};
-    var siteI = site.images && typeof site.images === "object" ? site.images : {};
-    var url = siteI.brand ? String(siteI.brand).trim() : "";
-    setIconSlot("brand-icon-root", url, iconDefaults.brand);
-  }
-
   function tapToCallHint() {
     var t = api().I18N[state.lang] || {};
     var en = api().I18N.en || {};
@@ -249,67 +231,67 @@
   }
 
   function renderLines() {
-    var ul = byId("lines-list");
-    if (!ul) return;
-    ul.innerHTML = "";
+    var grid = byId("contact-nav");
+    if (!grid) return;
     var lines = getLines();
+    if (!lines.length) return;
+    grid.innerHTML = "";
     var hint = tapToCallHint();
     for (var i = 0; i < lines.length; i++) {
       var L = lines[i];
-      var li = document.createElement("li");
-      li.setAttribute("data-line-id", L.id);
+      var art = document.createElement("article");
+      art.className = "line-slot";
+      art.setAttribute("data-line-id", L.id);
       var a = document.createElement("a");
-      a.className = "action action-call";
+      a.className = dialCardClassForId(L.id);
       a.href = "tel:" + L.tel;
-      var iconWrap = document.createElement("span");
-      iconWrap.className = "action-icon";
-      iconWrap.setAttribute("aria-hidden", "true");
-      iconWrap.innerHTML = PHONE_ICON_SVG;
-      var body = document.createElement("span");
-      body.className = "action-body";
-      var title = document.createElement("span");
-      title.className = "action-title";
-      title.textContent = L.name;
-      var desc = document.createElement("span");
-      desc.className = "action-desc";
-      desc.textContent = lineDescription(L, hint);
-      body.appendChild(title);
-      body.appendChild(desc);
-      var arrow = document.createElement("span");
-      arrow.className = "action-arrow";
-      arrow.setAttribute("aria-hidden", "true");
-      arrow.textContent = "\u2192";
-      a.appendChild(iconWrap);
-      a.appendChild(body);
-      a.appendChild(arrow);
-      li.appendChild(a);
-      ul.appendChild(li);
+      var lab = document.createElement("span");
+      lab.className = "dial-card__label";
+      lab.textContent = L.name;
+      var big =
+        L.display ||
+        formatNationalDisplay(L.tel) ||
+        L.tel;
+      var num = document.createElement("span");
+      num.className = "dial-card__num";
+      num.textContent = big;
+      var sub = document.createElement("span");
+      sub.className = "dial-card__hint";
+      if (L.subtitle) {
+        sub.textContent = L.subtitle;
+      } else {
+        sub.setAttribute("data-i18n", "tapToCall");
+        sub.textContent = hint || "Tap to call";
+      }
+      a.appendChild(lab);
+      a.appendChild(num);
+      a.appendChild(sub);
+      art.appendChild(a);
+      grid.appendChild(art);
     }
   }
 
   function applyAll() {
-    api().applyStrings(state.lang);
     if (siteJson) applyMeta(siteJson.meta);
     renderLines();
+    if (api()) {
+      api().applyStrings(state.lang);
+    }
     var merged = mergeContentLayers();
     applyTextOverrides(merged);
     applyFooterNote(merged);
-    applyBrandIcon();
     var lsel = byId("lang-select");
-    if (lsel && isValidLocale(state.lang)) lsel.value = state.lang;
+    if (lsel && api() && isValidLocale(state.lang)) lsel.value = state.lang;
   }
 
   function init() {
     if (!api() || !Object.keys(api().I18N).length) {
-      console.warn("security page: locales not loaded (locales/messages.json).");
       return;
     }
-    var lines = getLines();
-    if (!lines.length) {
-      console.warn("security page: add lines in config/site.json (or window.SECURITY_LINES).");
+    if (!getLines().length) {
+      console.warn("emergency-lines: no lines (check config/site.json and #site-bootstrap)");
       return;
     }
-    cacheIconDefaults();
     state.lang = resolveInitialLang();
     buildLangSelect(state.lang);
     applyAll();
@@ -361,20 +343,55 @@
     });
   }
 
+  function installFallbackLocales() {
+    SecurityPageI18n.install({
+      strings: {
+        en: {
+          pageTitle: "Phone lines · Security & medical",
+          eyebrow: "Contact",
+          heading: "Phone numbers",
+          lead: "Tap a line to start a voice call on your phone.",
+          navLabel: "Phone lines",
+          labelLanguage: "Language",
+          tapToCall: "Tap to call",
+        },
+      },
+      langNames: { en: "English" },
+      rtlLocales: ["ar", "he", "fa", "ur"],
+    });
+  }
+
   function bootstrap() {
+    var embedded = loadEmbeddedSite();
+    siteJson = embedded && embedded.lines && embedded.lines.length ? embedded : { lines: [] };
+
     if (!window.SecurityPageI18n) {
-      console.warn("security page: SecurityPageI18n missing (i18n.js).");
       return;
     }
-    Promise.all([fetchJson("config/site.json"), fetchJson("locales/messages.json")])
-      .then(function (pair) {
-        siteJson = pair[0];
-        SecurityPageI18n.install(pair[1]);
-        init();
+
+    var siteP = fetchJson("config/site.json")
+      .then(function (j) {
+        if (j && j.lines && j.lines.length) {
+          siteJson = j;
+        }
+        return siteJson;
+      })
+      .catch(function () {
+        return siteJson;
+      });
+
+    var msgP = fetchJson("locales/messages.json")
+      .then(function (j) {
+        SecurityPageI18n.install(j);
       })
       .catch(function (e) {
-        console.warn("security page: failed to load config or locales", e);
+        console.warn("emergency-lines: locales/messages.json failed, using English fallback", e);
+        installFallbackLocales();
       });
+
+    Promise.all([siteP, msgP]).then(function () {
+      init();
+    });
   }
 
   if (document.readyState === "loading") {
