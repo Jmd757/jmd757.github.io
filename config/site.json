@@ -7,13 +7,15 @@
       "id": "security",
       "name": "Security",
       "tel": "+442477092465",
-      "display": "02477 092465"
+      "display": "02477 092465",
+      "icon": "assets/icons/security.svg"
     },
     {
       "id": "medical-emergency",
       "name": "Medical emergency",
       "tel": "+442477092474",
-      "display": "02477 092474"
+      "display": "02477 092474",
+      "icon": "assets/icons/medical.svg"
     }
   ]
 }

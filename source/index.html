@@ -228,31 +228,61 @@
       outline: 2px solid var(--focus);
       outline-offset: 4px;
     }
+    .dial-card__icon {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: stretch;
+      width: 3.5rem;
+      min-height: 3.5rem;
+      padding-inline-start: 0.85rem;
+      padding-inline-end: 0.35rem;
+    }
+    .dial-card__icon img {
+      width: 2.5rem;
+      height: 2.5rem;
+      max-width: 100%;
+      object-fit: contain;
+      display: block;
+    }
     .dial-card__main {
       flex: 1;
-      padding: 1.35rem 1rem 1.35rem 1.35rem;
+      padding: 1.1rem 0.65rem 1.1rem 0.35rem;
       min-width: 0;
     }
     html[dir="rtl"] .dial-card__main {
-      padding: 1.35rem 1.35rem 1.35rem 1rem;
+      padding: 1.1rem 0.35rem 1.1rem 0.65rem;
+    }
+    html[dir="rtl"] .dial-card__icon {
+      padding-inline-start: 0.35rem;
+      padding-inline-end: 0.85rem;
     }
     .dial-card__label {
       display: block;
       font-size: 0.75rem;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--muted);
       margin-bottom: 0.4rem;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+      line-height: 1.35;
     }
     .dial-card__num {
       display: block;
       font-family: var(--font-display);
-      font-size: clamp(1.55rem, 6.5vw, 1.95rem);
+      font-size: clamp(1.1rem, 4.8vw, 1.85rem);
       font-weight: 700;
       font-variant-numeric: tabular-nums;
-      letter-spacing: 0.03em;
-      line-height: 1.2;
+      letter-spacing: 0.02em;
+      line-height: 1.25;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .dial-card__hint {
       display: block;
@@ -261,6 +291,11 @@
       font-weight: 500;
       color: var(--muted);
       opacity: 0.92;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+      line-height: 1.4;
     }
     .dial-card__chevron {
       display: flex;
@@ -327,7 +362,7 @@
     }
   </style>
   <script type="application/json" id="site-bootstrap">
-  {"meta":{"themeColor":"#13161d"},"lines":[{"id":"security","name":"Security","tel":"+442477092465","display":"02477 092465"},{"id":"medical-emergency","name":"Medical emergency","tel":"+442477092474","display":"02477 092474"}]}
+  {"meta":{"themeColor":"#13161d"},"lines":[{"id":"security","name":"Security","tel":"+442477092465","display":"02477 092465","icon":"assets/icons/security.svg"},{"id":"medical-emergency","name":"Medical emergency","tel":"+442477092474","display":"02477 092474","icon":"assets/icons/medical.svg"}]}
   </script>
 </head>
 <body>
@@ -347,6 +382,9 @@
       <nav id="contact-nav" class="line-grid" aria-label="Site resource phone lines">
         <article class="line-slot" data-line-id="security">
           <a class="dial-card dial-card--security" href="tel:+442477092465">
+            <div class="dial-card__icon" aria-hidden="true">
+              <img src="assets/icons/security.svg" alt="" width="40" height="40" decoding="async">
+            </div>
             <div class="dial-card__main">
               <span class="dial-card__label">Security</span>
               <span class="dial-card__num">02477 092465</span>
@@ -357,6 +395,9 @@
         </article>
         <article class="line-slot" data-line-id="medical-emergency">
           <a class="dial-card dial-card--medical-emergency" href="tel:+442477092474">
+            <div class="dial-card__icon" aria-hidden="true">
+              <img src="assets/icons/medical.svg" alt="" width="40" height="40" decoding="async">
+            </div>
             <div class="dial-card__main">
               <span class="dial-card__label">Medical emergency</span>
               <span class="dial-card__num">02477 092474</span>

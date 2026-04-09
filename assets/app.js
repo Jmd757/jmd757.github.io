@@ -23,16 +23,27 @@
     }
   }
 
+  function defaultIconForLineId(lineId) {
+    var id = String(lineId || "");
+    if (id === "security") return "assets/icons/security.svg";
+    if (id === "medical-emergency") return "assets/icons/medical.svg";
+    return "";
+  }
+
   function normalizeLine(o) {
     if (!o || !o.id) return null;
     var tel = String(o.tel || "").replace(/\s/g, "");
     if (!tel) return null;
+    var id = String(o.id);
+    var iconRaw = o.icon != null ? String(o.icon).trim() : "";
+    var icon = iconRaw !== "" ? iconRaw : defaultIconForLineId(id);
     return {
-      id: String(o.id),
-      name: (o.name && String(o.name).trim()) || String(o.id),
+      id: id,
+      name: (o.name && String(o.name).trim()) || id,
       tel: tel,
       display: o.display != null && String(o.display).trim() !== "" ? String(o.display).trim() : "",
       subtitle: o.subtitle != null && String(o.subtitle).trim() !== "" ? String(o.subtitle).trim() : "",
+      icon: icon,
     };
   }
 
@@ -60,11 +71,17 @@
       var tel = href.indexOf("tel:") === 0 ? href.slice(4).replace(/\s/g, "") : "";
       var label = slot.querySelector(".dial-card__label");
       var num = slot.querySelector(".dial-card__num");
+      var iconImg = slot.querySelector(".dial-card__icon img");
+      var icon = "";
+      if (iconImg) {
+        icon = (iconImg.getAttribute("src") || "").trim();
+      }
       var n = normalizeLine({
         id: id,
         name: label ? label.textContent.trim() : id,
         tel: tel,
         display: num ? num.textContent.trim() : "",
+        icon: icon || undefined,
       });
       if (n) out.push(n);
     }
@@ -272,6 +289,19 @@
       chev.className = "dial-card__chevron";
       chev.setAttribute("aria-hidden", "true");
       chev.textContent = "›";
+      if (L.icon) {
+        var iconWrap = document.createElement("div");
+        iconWrap.className = "dial-card__icon";
+        iconWrap.setAttribute("aria-hidden", "true");
+        var img = document.createElement("img");
+        img.src = L.icon;
+        img.alt = "";
+        img.width = 40;
+        img.height = 40;
+        img.decoding = "async";
+        iconWrap.appendChild(img);
+        a.appendChild(iconWrap);
+      }
       a.appendChild(main);
       a.appendChild(chev);
       art.appendChild(a);

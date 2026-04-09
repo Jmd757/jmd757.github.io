@@ -1,4 +1,4 @@
-# Publishes index.html, assets/*.js, and .nojekyll to GitHub Pages.
+# Publishes index.html, assets/*.js, assets/icons/*.svg, and .nojekyll to GitHub Pages.
 # Repo → Settings → Pages → Build: GitHub Actions (not "Deploy from branch").
 
 name: Deploy GitHub Pages
@@ -28,10 +28,11 @@ jobs:
 
       - name: Prepare site
         run: |
-          mkdir -p _site/assets
+          mkdir -p _site/assets/icons
           cp index.html _site/
           cp .nojekyll _site/
           cp assets/*.js _site/assets/
+          cp assets/icons/*.svg _site/assets/icons/
           cp -r config locales _site/
 
       - uses: actions/configure-pages@v4
