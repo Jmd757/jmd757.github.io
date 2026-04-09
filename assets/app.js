@@ -347,11 +347,11 @@
     SecurityPageI18n.install({
       strings: {
         en: {
-          pageTitle: "Phone lines · Security & medical",
-          eyebrow: "Contact",
-          heading: "Phone numbers",
-          lead: "Tap a line to start a voice call on your phone.",
-          navLabel: "Phone lines",
+          pageTitle: "Site resources · Phone lines",
+          eyebrow: "This site",
+          heading: "Access site resources",
+          lead: "Use the numbers below for on-site help and services—security, medical emergencies, and other needs. Tap to place a call from your phone.",
+          navLabel: "Site resource phone lines",
           labelLanguage: "Language",
           tapToCall: "Tap to call",
         },
