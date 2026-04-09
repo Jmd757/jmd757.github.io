@@ -41,19 +41,20 @@
   },
   "strings": {
     "en": {
-      "pageTitle": "Security desk · Contact",
-      "eyebrow": "Security desk",
-      "heading": "Contact security",
-      "lead": "Use any option below. Phone and SMS open ready for your message. WhatsApp opens a chat with this number—start a voice or video call from there if needed.",
-      "navLabel": "Contact security",
-      "callTitle": "Call security",
-      "callDesc": "Direct line to the security office",
-      "smsTitle": "Text security",
-      "smsDesc": "SMS with an empty draft, ready to type",
-      "waTitle": "WhatsApp",
-      "waDesc": "Message or call from the chat screen",
+      "pageTitle": "Phone lines · Security & medical",
+      "eyebrow": "Contact",
+      "heading": "Phone numbers",
+      "lead": "Tap the line you need. Your device will start a normal voice call.",
+      "navLabel": "Phone lines",
+      "tapToCall": "Tap to call",
+      "callTitle": "Call",
+      "callDesc": "",
+      "smsTitle": "",
+      "smsDesc": "",
+      "waTitle": "",
+      "waDesc": "",
       "labelLanguage": "Language",
-      "labelOffice": "Security office"
+      "labelOffice": ""
     },
     "es": {
       "pageTitle": "Central de seguridad · Contacto",

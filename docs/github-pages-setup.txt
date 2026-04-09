@@ -7,15 +7,17 @@ What was added in the repo
 
 Configuration (no HTML edits needed for content)
 - config/site.json — structure:
-  - offices[] — id, name, tel, wa, optional channels. Optional per office: content, contentLocales, images (same shape as site-level, merged on top).
+  - lines[] — each line: id, name, tel (E.164, e.g. +442477092465), optional display (shown under the title, e.g. national format), optional subtitle (replaces display when set).
   - meta.themeColor — sets the <meta name="theme-color"> value.
-  - content — optional overrides for any UI key that matches data-i18n (e.g. lead, eyebrow, heading, callTitle, pageTitle, navLabel). Non-empty values replace locales/messages.json for every language.
+  - content — optional overrides for any UI key that matches data-i18n (e.g. lead, eyebrow, heading, pageTitle, navLabel). Non-empty values replace locales/messages.json for every language.
   - contentLocales — e.g. { "de": { "lead": "…" } } overrides for that locale only (after merging site content).
-  - images — optional URLs (relative to the page or absolute): brand, call, sms, whatsapp. Empty string keeps the built-in SVG. Per-office images override site images when set.
-  - content.footerNote — optional extra footer line (plain text).
-- locales/messages.json — strings per locale, langNames for the language dropdown, rtlLocales for text direction.
+  - images — optional brand URL (relative or absolute). Empty keeps the built-in SVG.
+  - content.footerNote — optional footer line (plain text).
+- locales/messages.json — strings per locale, langNames for the language dropdown, rtlLocales for text direction. English includes tapToCall for the secondary line when a row has no display/subtitle.
 
 The app loads JSON using the URL of assets/app.js to find the site root (so config/ and locales/ resolve correctly on GitHub Pages subpaths and trailing-slash edge cases).
+
+Optional JS override: window.SECURITY_LINES — same shape as lines[] if you cannot use site.json.
 
 One-time steps on GitHub (after you push this repo)
 1. Create a new repository on GitHub (public repos get free Pages; private Pages may need a paid plan — check current GitHub pricing).

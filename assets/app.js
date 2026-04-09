@@ -1,11 +1,13 @@
-/* config/site.json: offices, meta, content, images; locales/messages.json: i18n */
+/* config/site.json: lines (phone only), meta, content, images; locales/messages.json: i18n */
 (function () {
   "use strict";
 
   var LS_LANG = "security-page-lang";
-  var LS_OFFICE = "security-page-office";
   var siteJson = null;
   var iconDefaults = null;
+
+  var PHONE_ICON_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
 
   function api() {
     return window.SecurityPageI18n;
@@ -15,46 +17,39 @@
     return document.getElementById(id);
   }
 
-  function normalizeOffice(o) {
+  function normalizeLine(o) {
     if (!o || !o.id) return null;
-    var ch = o.channels || {};
     var tel = String(o.tel || "").replace(/\s/g, "");
-    var waDigits = String(o.wa || "").replace(/\D/g, "");
-    if (!waDigits && tel) waDigits = tel.replace(/\D/g, "");
     return {
       id: String(o.id),
       name: o.name || String(o.id),
       tel: tel,
-      wa: waDigits,
-      channels: {
-        call: ch.call !== false,
-        sms: ch.sms !== false,
-        whatsapp: ch.whatsapp !== false,
-      },
+      display: o.display != null && String(o.display).trim() !== "" ? String(o.display).trim() : "",
+      subtitle: o.subtitle != null && String(o.subtitle).trim() !== "" ? String(o.subtitle).trim() : "",
       content: o.content && typeof o.content === "object" ? o.content : null,
       contentLocales: o.contentLocales && typeof o.contentLocales === "object" ? o.contentLocales : null,
       images: o.images && typeof o.images === "object" ? o.images : null,
     };
   }
 
-  function loadOfficesFromSiteFile() {
-    if (!siteJson || !siteJson.offices || !siteJson.offices.length) return null;
+  function loadLinesFromSite() {
+    if (!siteJson || !siteJson.lines || !siteJson.lines.length) return null;
     var out = [];
-    for (var i = 0; i < siteJson.offices.length; i++) {
-      var n = normalizeOffice(siteJson.offices[i]);
+    for (var i = 0; i < siteJson.lines.length; i++) {
+      var n = normalizeLine(siteJson.lines[i]);
       if (n) out.push(n);
     }
     return out.length ? out : null;
   }
 
-  function getOffices() {
-    var fromFile = loadOfficesFromSiteFile();
+  function getLines() {
+    var fromFile = loadLinesFromSite();
     if (fromFile && fromFile.length) return fromFile;
-    var w = window.SECURITY_OFFICES;
+    var w = window.SECURITY_LINES;
     if (w && w.length) {
       var alt = [];
       for (var j = 0; j < w.length; j++) {
-        var n = normalizeOffice(w[j]);
+        var n = normalizeLine(w[j]);
         if (n) alt.push(n);
       }
       return alt;
@@ -62,13 +57,26 @@
     return [];
   }
 
-  function officeById(id) {
-    var list = getOffices();
-    var want = String(id || "").toLowerCase();
-    for (var i = 0; i < list.length; i++) {
-      if (String(list[i].id).toLowerCase() === want) return list[i];
+  function formatNationalDisplay(tel) {
+    var d = String(tel).replace(/\D/g, "");
+    if (d.length >= 11 && d.indexOf("44") === 0) {
+      var n = d.slice(2);
+      if (n.length === 10 && n.charAt(0) === "7") {
+        return "0" + n.slice(0, 4) + " " + n.slice(4, 7) + " " + n.slice(7);
+      }
+      if (n.length === 10 && n.charAt(0) === "2") {
+        return "0" + n.slice(0, 4) + " " + n.slice(4);
+      }
     }
-    return list[0] || null;
+    return tel;
+  }
+
+  function lineDescription(L, tapHint) {
+    if (L.subtitle) return L.subtitle;
+    if (L.display) return L.display;
+    var fmt = formatNationalDisplay(L.tel);
+    if (fmt && fmt !== L.tel) return fmt;
+    return tapHint || L.tel || "";
   }
 
   function parseParams() {
@@ -100,65 +108,15 @@
     return api().pickLocaleFromBrowser();
   }
 
-  function resolveInitialOfficeId() {
-    var p = parseParams();
-    var oid = (p.get("office") || "").trim();
-    var oUrl = officeById(oid);
-    if (oUrl) {
-      try {
-        localStorage.setItem(LS_OFFICE, oUrl.id);
-      } catch (e) {}
-      return oUrl.id;
-    }
+  var state = { lang: "en" };
+
+  function syncUrl() {
     try {
-      var s = localStorage.getItem(LS_OFFICE);
-      if (s && officeById(s)) return officeById(s).id;
+      var u = new URL(window.location.href);
+      u.searchParams.set("lang", state.lang);
+      u.searchParams.delete("office");
+      window.history.replaceState({}, "", u.toString());
     } catch (e) {}
-    var first = getOffices()[0];
-    return first ? first.id : "";
-  }
-
-  function setContactLinks(office) {
-    if (!office) return;
-    var tel = String(office.tel || "").replace(/\s/g, "");
-    var wa = String(office.wa || "").replace(/\D/g, "");
-    var call = byId("link-call");
-    var sms = byId("link-sms");
-    var waLink = byId("link-wa");
-    if (call) call.href = "tel:" + tel;
-    if (sms) sms.href = "sms:" + tel;
-    if (waLink) waLink.href = "https://wa.me/" + wa;
-  }
-
-  function formatUKishNational(e164) {
-    var d = String(e164).replace(/\D/g, "");
-    if (d.length >= 11 && d.indexOf("44") === 0) {
-      var n = d.slice(2);
-      if (n.length === 10 && n.charAt(0) === "7") {
-        return "0" + n.slice(0, 4) + " " + n.slice(4, 7) + " " + n.slice(7);
-      }
-    }
-    return e164;
-  }
-
-  function updateFooter(office) {
-    if (!office) return;
-    var tel = String(office.tel || "").replace(/\s/g, "");
-    var nat = byId("foot-national");
-    var e164el = byId("foot-e164");
-    if (nat) nat.textContent = formatUKishNational(tel);
-    if (e164el) e164el.textContent = tel;
-  }
-
-  function updateChannelVisibility(office) {
-    if (!office || !office.channels) return;
-    var ch = office.channels;
-    var keys = ["call", "sms", "whatsapp"];
-    for (var i = 0; i < keys.length; i++) {
-      var k = keys[i];
-      var li = document.querySelector('li[data-channel="' + k + '"]');
-      if (li) li.hidden = !ch[k];
-    }
   }
 
   function langNames() {
@@ -186,41 +144,7 @@
     sel.value = isValidLocale(current) ? current : "en";
   }
 
-  function buildOfficeSelect(currentId) {
-    var sel = byId("office-select");
-    if (!sel) return;
-    sel.innerHTML = "";
-    var list = getOffices();
-    for (var i = 0; i < list.length; i++) {
-      var off = list[i];
-      var o = document.createElement("option");
-      o.value = off.id;
-      o.textContent = off.name || off.id;
-      sel.appendChild(o);
-    }
-    var resolved = officeById(currentId);
-    if (resolved) sel.value = resolved.id;
-    else if (list[0]) sel.value = list[0].id;
-  }
-
-  var state = { lang: "en", officeId: "" };
-
-  function syncUrl() {
-    try {
-      var u = new URL(window.location.href);
-      u.searchParams.set("lang", state.lang);
-      if (state.officeId) u.searchParams.set("office", state.officeId);
-      window.history.replaceState({}, "", u.toString());
-    } catch (e) {}
-  }
-
-  function toggleOfficeRow() {
-    var row = byId("picker-office-row");
-    if (!row) return;
-    row.hidden = getOffices().length < 2;
-  }
-
-  function mergeContentLayers(office) {
+  function mergeContentLayers() {
     var site = siteJson || {};
     var base = {};
     function assign(obj) {
@@ -232,8 +156,6 @@
     assign(site.content);
     var loc = state.lang;
     if (site.contentLocales && site.contentLocales[loc]) assign(site.contentLocales[loc]);
-    if (office && office.content) assign(office.content);
-    if (office && office.contentLocales && office.contentLocales[loc]) assign(office.contentLocales[loc]);
     return base;
   }
 
@@ -282,14 +204,8 @@
   function cacheIconDefaults() {
     if (iconDefaults) return;
     var b = byId("brand-icon-root");
-    var c = byId("action-icon-call");
-    var s = byId("action-icon-sms");
-    var w = byId("action-icon-whatsapp");
     iconDefaults = {
       brand: b ? b.innerHTML : "",
-      call: c ? c.innerHTML : "",
-      sms: s ? s.innerHTML : "",
-      whatsapp: w ? w.innerHTML : "",
     };
   }
 
@@ -300,17 +216,6 @@
     } catch (e) {
       return String(u).trim();
     }
-  }
-
-  function mergeImageMap(siteI, officeI) {
-    var keys = ["brand", "call", "sms", "whatsapp"];
-    var out = {};
-    for (var i = 0; i < keys.length; i++) {
-      var k = keys[i];
-      var v = (officeI && officeI[k]) || (siteI && siteI[k]) || "";
-      out[k] = String(v || "").trim();
-    }
-    return out;
   }
 
   function setIconSlot(elId, url, fallbackHtml) {
@@ -329,36 +234,69 @@
     el.appendChild(img);
   }
 
-  function applyIcons(office) {
+  function applyBrandIcon() {
     cacheIconDefaults();
     var site = siteJson || {};
     var siteI = site.images && typeof site.images === "object" ? site.images : {};
-    var offI = office && office.images ? office.images : null;
-    var m = mergeImageMap(siteI, offI);
-    setIconSlot("brand-icon-root", m.brand, iconDefaults.brand);
-    setIconSlot("action-icon-call", m.call, iconDefaults.call);
-    setIconSlot("action-icon-sms", m.sms, iconDefaults.sms);
-    setIconSlot("action-icon-whatsapp", m.whatsapp, iconDefaults.whatsapp);
+    var url = siteI.brand ? String(siteI.brand).trim() : "";
+    setIconSlot("brand-icon-root", url, iconDefaults.brand);
+  }
+
+  function tapToCallHint() {
+    var t = api().I18N[state.lang] || {};
+    var en = api().I18N.en || {};
+    return t.tapToCall || en.tapToCall || "";
+  }
+
+  function renderLines() {
+    var ul = byId("lines-list");
+    if (!ul) return;
+    ul.innerHTML = "";
+    var lines = getLines();
+    var hint = tapToCallHint();
+    for (var i = 0; i < lines.length; i++) {
+      var L = lines[i];
+      var li = document.createElement("li");
+      li.setAttribute("data-line-id", L.id);
+      var a = document.createElement("a");
+      a.className = "action action-call";
+      a.href = "tel:" + L.tel;
+      var iconWrap = document.createElement("span");
+      iconWrap.className = "action-icon";
+      iconWrap.setAttribute("aria-hidden", "true");
+      iconWrap.innerHTML = PHONE_ICON_SVG;
+      var body = document.createElement("span");
+      body.className = "action-body";
+      var title = document.createElement("span");
+      title.className = "action-title";
+      title.textContent = L.name;
+      var desc = document.createElement("span");
+      desc.className = "action-desc";
+      desc.textContent = lineDescription(L, hint);
+      body.appendChild(title);
+      body.appendChild(desc);
+      var arrow = document.createElement("span");
+      arrow.className = "action-arrow";
+      arrow.setAttribute("aria-hidden", "true");
+      arrow.textContent = "\u2192";
+      a.appendChild(iconWrap);
+      a.appendChild(body);
+      a.appendChild(arrow);
+      li.appendChild(a);
+      ul.appendChild(li);
+    }
   }
 
   function applyAll() {
     api().applyStrings(state.lang);
-    var off = officeById(state.officeId);
     if (siteJson) applyMeta(siteJson.meta);
-    if (off) {
-      state.officeId = off.id;
-      setContactLinks(off);
-      updateFooter(off);
-      updateChannelVisibility(off);
-    }
-    var merged = mergeContentLayers(off);
+    renderLines();
+    var merged = mergeContentLayers();
     applyTextOverrides(merged);
     applyFooterNote(merged);
-    applyIcons(off);
+    applyBrandIcon();
     var lsel = byId("lang-select");
     if (lsel && isValidLocale(state.lang)) lsel.value = state.lang;
-    var osel = byId("office-select");
-    if (osel && officeById(state.officeId)) osel.value = officeById(state.officeId).id;
   }
 
   function init() {
@@ -366,17 +304,14 @@
       console.warn("security page: locales not loaded (locales/messages.json).");
       return;
     }
-    var offices = getOffices();
-    if (!offices.length) {
-      console.warn("security page: add offices in config/site.json (or window.SECURITY_OFFICES).");
+    var lines = getLines();
+    if (!lines.length) {
+      console.warn("security page: add lines in config/site.json (or window.SECURITY_LINES).");
       return;
     }
     cacheIconDefaults();
     state.lang = resolveInitialLang();
-    state.officeId = resolveInitialOfficeId();
-    toggleOfficeRow();
     buildLangSelect(state.lang);
-    buildOfficeSelect(state.officeId);
     applyAll();
     syncUrl();
 
@@ -394,28 +329,8 @@
         }
       });
     }
-
-    var offSel = byId("office-select");
-    if (offSel) {
-      offSel.addEventListener("change", function () {
-        var v = offSel.value;
-        var o = officeById(v);
-        if (o) {
-          state.officeId = o.id;
-          try {
-            localStorage.setItem(LS_OFFICE, o.id);
-          } catch (e) {}
-          applyAll();
-          syncUrl();
-        }
-      });
-    }
   }
 
-  /**
-   * Directory URL where index + config/ + locales/ live. Derived from this script so fetches work on
-   * GitHub Pages (any subpath), with odd pathname shapes, and when opened as /folder vs /folder/.
-   */
   function siteAssetBase() {
     var lists = document.getElementsByTagName("script");
     for (var i = lists.length - 1; i >= 0; i--) {

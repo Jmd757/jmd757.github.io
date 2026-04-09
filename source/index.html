@@ -8,10 +8,10 @@
   <!--
     Editable source — copy changes into root index.html for GitHub Pages.
 
-    Per-site setup: edit config/site.json (offices, numbers, channels) and
-    locales/messages.json (translations + language picker names). Not embedded in HTML.
+    Per-site setup: config/site.json (lines: id, name, tel, optional display/subtitle) and
+    locales/messages.json. Phone-only UI; SMS/WhatsApp removed.
 
-    QR: https:// to hosted page. ?lang=  ?office=  See docs/qr-and-browser.txt.
+    QR: https:// to hosted page. ?lang=  See docs/qr-and-browser.txt.
   -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,10 +30,6 @@
       --accent-bar: linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
       --call: #2563eb;
       --call-soft: rgba(37, 99, 235, 0.2);
-      --sms: #059669;
-      --sms-soft: rgba(5, 150, 105, 0.2);
-      --wa: #128c7e;
-      --wa-soft: rgba(18, 140, 126, 0.22);
       --focus: #fbbf24;
     }
     @media (prefers-color-scheme: light) {
@@ -46,8 +42,6 @@
         --text: #0f172a;
         --text-secondary: #64748b;
         --call-soft: rgba(37, 99, 235, 0.12);
-        --sms-soft: rgba(5, 150, 105, 0.12);
-        --wa-soft: rgba(18, 140, 126, 0.12);
       }
     }
     *, *::before, *::after { box-sizing: border-box; }
@@ -194,44 +188,6 @@
       color: var(--text-secondary);
       line-height: 1.55;
     }
-    .pickers {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-bottom: 1.25rem;
-    }
-    .picker-row {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-    .picker-label {
-      font-size: 0.6875rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-    }
-    .picker-select {
-      font-family: inherit;
-      font-size: 0.9375rem;
-      padding: 0.55rem 0.75rem;
-      border-radius: 0.5rem;
-      border: 1px solid var(--card-border);
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text);
-      cursor: pointer;
-      width: 100%;
-    }
-    @media (prefers-color-scheme: light) {
-      .picker-select {
-        background: #fff;
-      }
-    }
-    .picker-select:focus-visible {
-      outline: 2px solid var(--focus);
-      outline-offset: 2px;
-    }
     .actions {
       list-style: none;
       margin: 0;
@@ -296,14 +252,6 @@
       background: var(--call-soft);
       color: var(--call);
     }
-    .action-sms .action-icon {
-      background: var(--sms-soft);
-      color: var(--sms);
-    }
-    .action-wa .action-icon {
-      background: var(--wa-soft);
-      color: var(--wa);
-    }
     .action-body {
       flex: 1;
       min-width: 0;
@@ -337,12 +285,8 @@
       text-align: center;
       line-height: 1.45;
     }
-    .foot strong {
-      color: var(--text);
-      font-weight: 600;
-    }
     .foot-note {
-      margin: 0.65rem 0 0;
+      margin: 0;
       font-size: 0.6875rem;
       line-height: 1.4;
       color: var(--text-secondary);
@@ -359,14 +303,13 @@
     html[dir="rtl"] .action-arrow {
       transform: scaleX(-1);
     }
-    html[dir="rtl"] .picker-select,
     html[dir="rtl"] .lang-select-compact {
       text-align: right;
     }
   </style>
 </head>
 <body>
-  <!-- Offices: config/site.json · UI languages: locales/messages.json (see repo docs) -->
+  <!-- Lines: config/site.json · UI languages: locales/messages.json (see repo docs) -->
   <div class="shell">
     <div class="lang-float">
       <label class="visually-hidden" for="lang-select"><span data-i18n="labelLanguage">Language</span></label>
@@ -381,59 +324,15 @@
             </svg>
           </div>
           <div class="brand-text">
-            <p class="eyebrow" data-i18n="eyebrow">Security desk</p>
-            <h1 data-i18n="heading">Contact security</h1>
+            <p class="eyebrow" data-i18n="eyebrow">Contact</p>
+            <h1 data-i18n="heading">Phone numbers</h1>
           </div>
         </div>
-        <p class="lead" data-i18n="lead">Use any option below. Phone and SMS open ready for your message. WhatsApp opens a chat with this number—start a voice or video call from there if needed.</p>
-        <div class="pickers">
-          <div class="picker-row" id="picker-office-row">
-            <label class="picker-label" for="office-select"><span data-i18n="labelOffice">Security office</span></label>
-            <select id="office-select" class="picker-select" autocomplete="off"></select>
-          </div>
-        </div>
-        <nav id="contact-nav" aria-label="Contact security">
-          <ul class="actions">
-            <li data-channel="call">
-              <a id="link-call" class="action action-call" href="tel:+447599885343">
-                <span class="action-icon" id="action-icon-call" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                </span>
-                <span class="action-body">
-                  <span class="action-title" data-i18n="callTitle">Call security</span>
-                  <span class="action-desc" data-i18n="callDesc">Direct line to the security office</span>
-                </span>
-                <span class="action-arrow" aria-hidden="true">→</span>
-              </a>
-            </li>
-            <li data-channel="sms">
-              <a id="link-sms" class="action action-sms" href="sms:+447599885343">
-                <span class="action-icon" id="action-icon-sms" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                </span>
-                <span class="action-body">
-                  <span class="action-title" data-i18n="smsTitle">Text security</span>
-                  <span class="action-desc" data-i18n="smsDesc">SMS with an empty draft, ready to type</span>
-                </span>
-                <span class="action-arrow" aria-hidden="true">→</span>
-              </a>
-            </li>
-            <li data-channel="whatsapp">
-              <a id="link-wa" class="action action-wa" href="https://wa.me/447599885343" rel="noopener noreferrer">
-                <span class="action-icon" id="action-icon-whatsapp" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                </span>
-                <span class="action-body">
-                  <span class="action-title" data-i18n="waTitle">WhatsApp</span>
-                  <span class="action-desc" data-i18n="waDesc">Message or call from the chat screen</span>
-                </span>
-                <span class="action-arrow" aria-hidden="true">→</span>
-              </a>
-            </li>
-          </ul>
+        <p class="lead" data-i18n="lead">Tap the line you need. Your device will start a normal voice call.</p>
+        <nav id="contact-nav" aria-label="Phone lines">
+          <ul id="lines-list" class="actions"></ul>
         </nav>
         <footer class="foot">
-          <strong id="foot-national">07599 885343</strong> · <span id="foot-e164">+447599885343</span>
           <p id="foot-note" class="foot-note" hidden></p>
         </footer>
       </div>
