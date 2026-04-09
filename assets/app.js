@@ -296,8 +296,8 @@
         var img = document.createElement("img");
         img.src = L.icon;
         img.alt = "";
-        img.width = 40;
-        img.height = 40;
+        img.width = 48;
+        img.height = 48;
         img.decoding = "async";
         iconWrap.appendChild(img);
         a.appendChild(iconWrap);

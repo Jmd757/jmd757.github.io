@@ -82,7 +82,7 @@
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
-      max-width: 26.5rem;
+      max-width: 28rem;
       margin: 0 auto;
       padding: 1rem 1.25rem 2.5rem;
       position: relative;
@@ -177,7 +177,7 @@
     .line-grid {
       display: flex;
       flex-direction: column;
-      gap: 1.125rem;
+      gap: 1.35rem;
       flex: 1;
     }
     .line-slot {
@@ -190,13 +190,16 @@
       text-decoration: none;
       color: inherit;
       padding: 0;
-      border-radius: var(--radius-lg);
+      min-height: 8.75rem;
+      border-radius: 1.25rem;
       border: 1px solid var(--border);
       background: var(--surface);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       box-shadow: var(--shadow-card);
       overflow: hidden;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
       transition: transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.22s ease, border-color 0.2s ease;
     }
     @media (prefers-reduced-motion: reduce) {
@@ -230,59 +233,68 @@
       align-items: center;
       justify-content: center;
       align-self: stretch;
-      width: 3.5rem;
-      min-height: 3.5rem;
-      padding-inline-start: 0.85rem;
-      padding-inline-end: 0.35rem;
+      width: 4.5rem;
+      min-width: 4.5rem;
+      min-height: 100%;
+      padding-inline-start: 1rem;
+      padding-inline-end: 0.5rem;
     }
     .dial-card__icon img {
-      width: 2.5rem;
-      height: 2.5rem;
+      width: 3rem;
+      height: 3rem;
       max-width: 100%;
       object-fit: contain;
       display: block;
     }
     .dial-card__main {
       flex: 1;
-      padding: 1.1rem 0.65rem 1.1rem 0.35rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 1.25rem 0.75rem 1.25rem 0.25rem;
       min-width: 0;
+      min-height: 0;
     }
     html[dir="rtl"] .dial-card__main {
-      padding: 1.1rem 0.35rem 1.1rem 0.65rem;
+      padding: 1.25rem 0.25rem 1.25rem 0.75rem;
     }
     html[dir="rtl"] .dial-card__icon {
-      padding-inline-start: 0.35rem;
-      padding-inline-end: 0.85rem;
+      padding-inline-start: 0.5rem;
+      padding-inline-end: 1rem;
     }
     .dial-card__label {
       display: block;
-      font-size: 0.75rem;
+      font-size: 0.8125rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 0.4rem;
+      margin: 0;
       max-width: 100%;
       overflow-wrap: anywhere;
       word-break: break-word;
       hyphens: auto;
-      line-height: 1.35;
+      line-height: 1.4;
     }
     .dial-card__num {
       display: block;
       font-family: var(--font-display);
-      font-size: clamp(1.1rem, 4.8vw, 1.85rem);
+      font-size: clamp(1.35rem, 5.5vw, 2.1rem);
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       letter-spacing: 0.02em;
-      line-height: 1.25;
+      line-height: 1.2;
+      margin-top: 0.65rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid var(--border);
       max-width: 100%;
       overflow-wrap: anywhere;
       word-break: break-word;
     }
     .dial-card__hint {
       display: block;
-      margin-top: 0.55rem;
+      margin-top: auto;
+      padding-top: 0.65rem;
       font-size: 0.8125rem;
       font-weight: 500;
       color: var(--muted);
@@ -291,18 +303,20 @@
       overflow-wrap: anywhere;
       word-break: break-word;
       hyphens: auto;
-      line-height: 1.4;
+      line-height: 1.45;
     }
     .dial-card__chevron {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 3rem;
+      width: 3.75rem;
+      min-width: 3.75rem;
       flex-shrink: 0;
-      font-size: 1.35rem;
+      font-size: 1.65rem;
       font-weight: 300;
+      line-height: 1;
       color: var(--muted);
-      opacity: 0.35;
+      opacity: 0.4;
       border-left: 1px solid var(--border);
       background: rgba(0, 0, 0, 0.12);
     }
@@ -379,7 +393,7 @@
         <article class="line-slot" data-line-id="security">
           <a class="dial-card dial-card--security" href="tel:+442477092465">
             <div class="dial-card__icon" aria-hidden="true">
-              <img src="assets/icons/security.svg" alt="" width="40" height="40" decoding="async">
+              <img src="assets/icons/security.svg" alt="" width="48" height="48" decoding="async">
             </div>
             <div class="dial-card__main">
               <span class="dial-card__label">Security</span>
@@ -392,7 +406,7 @@
         <article class="line-slot" data-line-id="medical-emergency">
           <a class="dial-card dial-card--medical-emergency" href="tel:+442477092474">
             <div class="dial-card__icon" aria-hidden="true">
-              <img src="assets/icons/medical.svg" alt="" width="40" height="40" decoding="async">
+              <img src="assets/icons/medical.svg" alt="" width="48" height="48" decoding="async">
             </div>
             <div class="dial-card__main">
               <span class="dial-card__label">Medical emergency</span>
