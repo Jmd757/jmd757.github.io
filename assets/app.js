@@ -263,9 +263,17 @@
         sub.setAttribute("data-i18n", "tapToCall");
         sub.textContent = hint || "Tap to call";
       }
-      a.appendChild(lab);
-      a.appendChild(num);
-      a.appendChild(sub);
+      var main = document.createElement("div");
+      main.className = "dial-card__main";
+      main.appendChild(lab);
+      main.appendChild(num);
+      main.appendChild(sub);
+      var chev = document.createElement("span");
+      chev.className = "dial-card__chevron";
+      chev.setAttribute("aria-hidden", "true");
+      chev.textContent = "›";
+      a.appendChild(main);
+      a.appendChild(chev);
       art.appendChild(a);
       grid.appendChild(art);
     }
