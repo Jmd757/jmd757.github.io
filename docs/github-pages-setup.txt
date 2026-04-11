@@ -1,38 +1,64 @@
 GitHub Pages setup for this project
 ====================================
 
-What was added in the repo
-- .nojekyll — disables Jekyll so GitHub serves plain static files (also used in the deploy bundle).
-- .github/workflows/pages.yml — copies index.html, assets/*.js, config/, locales/, and .nojekyll into _site and deploys via GitHub Actions.
+What the repo contains
+- .nojekyll — disables Jekyll so GitHub serves plain static files (copied into the deploy bundle).
+- tools/render_static_pages.py — reads config/site.json and locales/messages.json, writes index.html
+  (default locale) plus one *.html file per other locale at the repo root. No runtime JavaScript.
+- .github/workflows/pages.yml — runs the renderer, copies all root *.html files, assets/icons/*.svg,
+  .nojekyll, and optional _headers into _site, then deploys via GitHub Actions.
 
-Configuration (no HTML edits needed for content)
-- config/site.json — structure:
-  - lines[] — each line: id, name, tel (E.164, e.g. +442477092465), optional display (large number text, e.g. national format), optional subtitle (small line under the number instead of “Tap to call”).
-  - meta.themeColor — sets the <meta name="theme-color"> value.
-  - content — optional overrides for any UI key that matches data-i18n (e.g. lead, eyebrow, heading, pageTitle, navLabel). Non-empty values replace locales/messages.json for every language.
-  - contentLocales — e.g. { "de": { "lead": "…" } } overrides for that locale only (after merging site content).
-  - images — optional brand URL (relative or absolute). Empty keeps the built-in SVG.
-  - content.footerNote — optional footer line (plain text).
-- locales/messages.json — strings per locale, langNames for the language dropdown, rtlLocales for text direction. English includes tapToCall for the secondary line when a row has no display/subtitle.
+Build workflow (local or CI)
+1. Edit config/site.json and/or locales/messages.json (and add or change images under assets/).
+2. Run: py tools/render_static_pages.py (Windows) or python3 tools/render_static_pages.py (Linux/macOS).
+3. Commit the generated *.html files at the repo root together with your JSON/image changes.
+4. Push; the Pages workflow re-runs the renderer so CI output always matches the committed JSON.
 
-The app loads JSON using the URL of assets/app.js to find the site root (so config/ and locales/ resolve correctly on GitHub Pages subpaths and trailing-slash edge cases).
+Logs
+- The renderer appends a short line to logs/render-static-pages.log each run (UTC timestamps).
 
-Optional JS override: window.SECURITY_LINES — same shape as lines[] if you cannot use site.json.
+Configuration (no hand-editing of generated HTML for content)
+- config/site.json
+  - defaultLocale — BCP-47 code that becomes index.html (must exist under messages.strings). If
+    omitted or invalid, "en" is used when present, otherwise the first sorted locale code.
+  - meta.themeColor — <meta name="theme-color"> on every generated page.
+  - lines[] — each line:
+    - id — stable identifier (used for styling fallback when accent is omitted).
+    - name — large card title (human-readable service name).
+    - tel — E.164 dial string for the tel: link (e.g. +442477092465).
+    - display — optional smaller line under the title (national or spaced format). If empty, a
+      simple UK-style national display is derived from tel when possible; otherwise tel is shown.
+    - icon — relative path to an image (e.g. assets/icons/security.svg or a PNG you added).
+    - subtitle — optional third line; when set, it replaces the localized “Tap to call” hint.
+    - accent — optional visual variant: "security" | "medical-emergency" | "other". If omitted,
+      security and medical-emergency ids keep their colors; everything else uses "other".
+  - content — optional object of UI string keys applied on top of every locale (same keys as in
+    locales/messages.json string entries), e.g. pageTitle, eyebrow, heading, lead, navLabel,
+    footerNote.
+  - contentLocales — per-locale overrides, e.g. { "de": { "lead": "…" } }.
 
-Resilience: index.html includes a #site-bootstrap JSON block and visible tel: links in the markup. If fetch to config/site.json fails, those defaults still apply; keep them in sync when you change numbers.
+- locales/messages.json
+  - strings — per-locale UI copy (merged with English as fallback for missing keys).
+  - langNames — labels for the plain link language switcher on each page.
+  - rtlLocales — base language codes that get dir="rtl" on <html>.
+
+Published URLs (project site example)
+- English (default): https://<your-username>.github.io/<repo>/
+- Other locales: same base with /<locale>.html (e.g. …/de.html, …/zh-CN.html). Encode the right URL
+  in QR codes if your audience is not English-first.
+
+AWS / other static hosts
+- Upload the same tree as _site: all generated *.html, assets/icons/*, .nojekyll, and optional
+  _headers. No server-side code or JSON fetch is required at runtime.
 
 One-time steps on GitHub (after you push this repo)
-1. Create a new repository on GitHub (public repos get free Pages; private Pages may need a paid plan — check current GitHub pricing).
+1. Create a new repository on GitHub (public repos get free Pages; private Pages may need a paid plan).
 2. Push your local branch (main or master) to GitHub.
 3. Open the repo on GitHub → Settings → Pages.
 4. Under "Build and deployment", set Source to "GitHub Actions" (not "Deploy from a branch").
-5. Open the Actions tab; the "Deploy GitHub Pages" workflow should run on the push. If it is the first time, approve Pages if GitHub prompts for it.
-
-Your live URL
-- Project site (repo named e.g. Security-Reporting-QR-Page):
-  https://<your-username>.github.io/Security-Reporting-QR-Page/
-- Put that URL (or /index.html) in the QR code.
+5. Open the Actions tab; the "Deploy GitHub Pages" workflow should run on the push. Approve Pages if prompted.
 
 Optional: deploy from a branch instead of Actions
 - Settings → Pages → Source: Deploy from branch → main (or master) → / (root).
-- Ensure .nojekyll exists at the repo root (it does). The workflow is then unnecessary but harmless.
+- You must still run tools/render_static_pages.py before committing so root *.html stay in sync with JSON.
+- Keep .nojekyll at the repo root.

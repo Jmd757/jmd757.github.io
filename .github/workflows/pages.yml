@@ -1,4 +1,4 @@
-# Publishes index.html, assets/*.js, assets/icons/*.svg, and .nojekyll to GitHub Pages.
+# Builds static HTML from JSON, then publishes *.html, assets/icons/*.svg, and .nojekyll.
 # Repo → Settings → Pages → Build: GitHub Actions (not "Deploy from branch").
 
 name: Deploy GitHub Pages
@@ -28,12 +28,12 @@ jobs:
 
       - name: Prepare site
         run: |
+          python3 tools/render_static_pages.py
           mkdir -p _site/assets/icons
-          cp index.html _site/
+          cp ./*.html _site/
           cp .nojekyll _site/
-          cp assets/*.js _site/assets/
           cp assets/icons/*.svg _site/assets/icons/
-          cp -r config locales _site/
+          if [ -f _headers ]; then cp _headers _site/; fi
 
       - uses: actions/configure-pages@v4
 
