@@ -7,11 +7,12 @@
 </head>
 <body>
   <p>
-    The live site is generated at the repository root. Edit
-    <code>config/site.json</code> and <code>locales/messages.json</code>, add images under
-    <code>assets/</code>, then run <code>py tools/render_static_pages.py</code> (or push to GitHub Actions)
-    to regenerate <code>index.html</code> and the per-locale <code>*.html</code> files. Do not copy this file
-    to the site root.
+    The live site is generated at the repository root as a single English <code>index.html</code>.
+    Edit <code>config/site.json</code> (and optional English strings under <code>locales/messages.json</code>
+    in <code>strings.en</code>, or use <code>site.json</code> <code>content</code> / <code>contentLocales.en</code>),
+    add images under <code>assets/</code>, then run <code>py tools/render_static_pages.py</code> (or push to
+    GitHub Actions). Visitors can use the browser or OS translate feature for other languages. Do not copy
+    this file to the site root.
   </p>
 </body>
 </html>

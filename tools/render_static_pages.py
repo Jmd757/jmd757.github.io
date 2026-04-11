@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Emit static HTML (no runtime JS) from config/site.json + locales/messages.json."""
+"""Emit a single English index.html from config/site.json + locales/messages.json (strings.en only)."""
 from __future__ import annotations
 
 import html
@@ -83,10 +83,8 @@ def accent_variant(line: dict) -> str:
     return "other"
 
 
-def merge_strings(site: dict, loc: str, strings_root: dict) -> dict:
-    en = dict(strings_root.get("en") or {})
-    loc_block = dict(strings_root.get(loc) or {})
-    merged = {**en, **loc_block}
+def merge_english_strings(site: dict, strings_root: dict) -> dict:
+    merged = dict(strings_root.get("en") or {})
     content = site.get("content")
     if isinstance(content, dict):
         for k, v in content.items():
@@ -97,7 +95,7 @@ def merge_strings(site: dict, loc: str, strings_root: dict) -> dict:
                 merged[k] = s
     cl = site.get("contentLocales")
     if isinstance(cl, dict):
-        block = cl.get(loc)
+        block = cl.get("en")
         if isinstance(block, dict):
             for k, v in block.items():
                 if v is None:
@@ -106,20 +104,6 @@ def merge_strings(site: dict, loc: str, strings_root: dict) -> dict:
                 if s:
                     merged[k] = s
     return merged
-
-
-def page_basename(locale: str, default_locale: str) -> str:
-    return "index.html" if locale == default_locale else f"{locale}.html"
-
-
-def is_rtl_locale(loc: str, rtl_locales: list[str]) -> bool:
-    base = loc.split("-")[0]
-    rtl = set(rtl_locales or [])
-    return base in rtl
-
-
-def safe_locale_filename(locale: str) -> bool:
-    return bool(re.fullmatch(r"[A-Za-z0-9-]+", locale))
 
 
 INLINE_CSS = r"""
@@ -171,69 +155,6 @@ INLINE_CSS = r"""
       max-width: 26rem;
       margin: 0 auto;
       padding: 1.25rem 1.1rem 2.5rem;
-    }
-    .top {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 0.5rem 0.65rem;
-      margin-bottom: 1.25rem;
-    }
-    html[dir="rtl"] .top {
-      justify-content: flex-start;
-    }
-    .top-label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-    .lang-select-wrap {
-      min-width: 0;
-      max-width: 100%;
-    }
-    .lang-select {
-      font: inherit;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      padding: 0.45rem 2rem 0.45rem 0.85rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      cursor: pointer;
-      max-width: min(100%, 14rem);
-      width: auto;
-      min-width: 8.5rem;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M1 1.5L6 6l5-4.5' stroke='%2394a3b8' stroke-width='1.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0.65rem center;
-      background-size: 0.65rem auto;
-    }
-    @media (prefers-color-scheme: light) {
-      .lang-select {
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M1 1.5L6 6l5-4.5' stroke='%2364748b' stroke-width='1.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      }
-    }
-    html[dir="rtl"] .lang-select {
-      padding: 0.45rem 0.85rem 0.45rem 2rem;
-      background-position: left 0.65rem center;
-    }
-    .lang-select:hover {
-      border-color: var(--muted);
-    }
-    .lang-select:focus-visible {
-      outline: 2px solid var(--focus);
-      outline-offset: 3px;
     }
     .intro-kicker {
       margin: 0 0 0.35rem;
@@ -301,9 +222,6 @@ INLINE_CSS = r"""
       padding: 0.75rem 0.5rem 0.75rem 0.85rem;
       background: var(--bg-elev);
     }
-    html[dir="rtl"] .dial-card__icon {
-      padding: 0.75rem 0.85rem 0.75rem 0.5rem;
-    }
     .dial-card__icon img {
       width: 2.5rem;
       height: 2.5rem;
@@ -318,9 +236,6 @@ INLINE_CSS = r"""
       gap: 0.35rem;
       padding: 0.85rem 0.75rem 0.85rem 0.35rem;
       min-width: 0;
-    }
-    html[dir="rtl"] .dial-card__main {
-      padding: 0.85rem 0.35rem 0.85rem 0.75rem;
     }
     .dial-card__title {
       margin: 0;
@@ -358,18 +273,6 @@ INLINE_CSS = r"""
     .dial-card--other {
       border-left: 3px solid var(--neutral-accent);
     }
-    html[dir="rtl"] .dial-card--security {
-      border-left: none;
-      border-right: 3px solid var(--security);
-    }
-    html[dir="rtl"] .dial-card--medical-emergency {
-      border-left: none;
-      border-right: 3px solid var(--emergency);
-    }
-    html[dir="rtl"] .dial-card--other {
-      border-left: none;
-      border-right: 3px solid var(--neutral-accent);
-    }
     .foot {
       margin-top: 2rem;
       padding-top: 1.25rem;
@@ -384,17 +287,7 @@ INLINE_CSS = r"""
 """
 
 
-def render_page(
-    *,
-    site: dict,
-    lines: list[dict],
-    loc: str,
-    default_locale: str,
-    locale_codes: list[str],
-    lang_names: dict[str, str],
-    rtl_locales: list[str],
-    merged: dict,
-) -> str:
+def render_page(*, site: dict, lines: list[dict], merged: dict) -> str:
     theme = merged.get("pageTitle") or "Site resources"
     theme_color = "#13161d"
     meta = site.get("meta")
@@ -407,8 +300,6 @@ def render_page(
     heading = html.escape(merged.get("heading") or "", quote=False)
     lead = html.escape(merged.get("lead") or "", quote=False)
     nav_label = html.escape(merged.get("navLabel") or "Phone lines", quote=True)
-    label_lang_text = html.escape(merged.get("labelLanguage") or "Language", quote=False)
-    label_lang_attr = html.escape(merged.get("labelLanguage") or "Language", quote=True)
     tap = html.escape(merged.get("tapToCall") or "Tap to call", quote=False)
 
     foot_raw = merged.get("footerNote")
@@ -419,19 +310,6 @@ def render_page(
             + html.escape(str(foot_raw).strip(), quote=False)
             + "</p></footer>"
         )
-
-    dir_attr = "rtl" if is_rtl_locale(loc, rtl_locales) else "ltr"
-    lang_attr = html.escape(loc, quote=True)
-
-    lang_options: list[str] = []
-    sorted_codes = sorted(locale_codes, key=lambda c: (lang_names.get(c) or c).lower())
-    for code in sorted_codes:
-        href = page_basename(code, default_locale)
-        label = html.escape(lang_names.get(code) or code, quote=False)
-        val = html.escape(href, quote=True)
-        sel = " selected" if code == loc else ""
-        lang_options.append(f'        <option value="{val}"{sel}>{label}</option>')
-    lang_options_html = "\n".join(lang_options)
 
     cards: list[str] = []
     for L in lines:
@@ -466,7 +344,7 @@ def render_page(
     cards_block = "\n".join(cards)
 
     return f"""<!DOCTYPE html>
-<html lang="{lang_attr}" dir="{dir_attr}">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -483,14 +361,6 @@ def render_page(
 </head>
 <body>
   <div class="page">
-    <header class="top">
-      <div class="lang-select-wrap">
-        <label class="top-label" for="lang-select">{label_lang_text}</label>
-        <select id="lang-select" class="lang-select" name="lang" autocomplete="off" aria-label="{label_lang_attr}" onchange="var v=this.value;if(v)window.location.href=v;">
-{lang_options_html}
-        </select>
-      </div>
-    </header>
     <header class="intro">
       <p class="intro-kicker">{eyebrow}</p>
       <h1 class="intro-title">{heading}</h1>
@@ -512,39 +382,35 @@ def load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def remove_stale_locale_html() -> int:
+    removed = 0
+    for p in ROOT.glob("*.html"):
+        if p.name != "index.html":
+            try:
+                p.unlink()
+                removed += 1
+            except OSError as e:
+                log(f"warning: could not remove {p.name}: {e}")
+    return removed
+
+
 def main() -> int:
     site = load_json(SITE_PATH)
     bundle = load_json(MESSAGES_PATH)
     strings_root = bundle.get("strings")
-    if not isinstance(strings_root, dict) or not strings_root:
-        log("error: locales/messages.json missing strings")
-        return 1
+    if not isinstance(strings_root, dict):
+        strings_root = {}
 
-    lang_names_raw = bundle.get("langNames")
-    lang_names: dict[str, str] = (
-        {str(k): str(v) for k, v in lang_names_raw.items()}
-        if isinstance(lang_names_raw, dict)
-        else {}
-    )
-    rtl_raw = bundle.get("rtlLocales")
-    rtl_locales: list[str] = [str(x) for x in rtl_raw] if isinstance(rtl_raw, list) else []
-
-    locale_codes: list[str] = []
-    for k in strings_root.keys():
-        ks = str(k)
-        if not safe_locale_filename(ks):
-            log(f"skip unsafe locale code: {ks!r}")
-            continue
-        locale_codes.append(ks)
-
-    if not locale_codes:
-        log("error: no valid locale codes")
-        return 1
-
-    default_raw = site.get("defaultLocale")
-    default_locale = str(default_raw).strip() if default_raw is not None else ""
-    if not default_locale or default_locale not in strings_root:
-        default_locale = "en" if "en" in strings_root else sorted(locale_codes)[0]
+    merged = merge_english_strings(site, strings_root)
+    if not merged.get("heading"):
+        merged.setdefault("pageTitle", "Site resources")
+        merged.setdefault("heading", "Access site resources")
+        merged.setdefault("lead", "")
+        merged.setdefault("navLabel", "Phone lines")
+        merged.setdefault("tapToCall", "Tap to call")
+        merged.setdefault("eyebrow", "This site")
+    if not strings_root.get("en"):
+        log("warning: locales/messages.json has no strings.en; using site content and fallbacks only")
 
     raw_lines = site.get("lines")
     lines: list[dict] = []
@@ -557,25 +423,15 @@ def main() -> int:
         log("error: no dial lines in config/site.json")
         return 1
 
-    written: list[str] = []
-    for loc in locale_codes:
-        merged = merge_strings(site, loc, strings_root)
-        out_name = page_basename(loc, default_locale)
-        body = render_page(
-            site=site,
-            lines=lines,
-            loc=loc,
-            default_locale=default_locale,
-            locale_codes=locale_codes,
-            lang_names=lang_names,
-            rtl_locales=rtl_locales,
-            merged=merged,
-        )
-        out_path = ROOT / out_name
-        out_path.write_text(body, encoding="utf-8", newline="\n")
-        written.append(out_name)
+    body = render_page(site=site, lines=lines, merged=merged)
+    out_path = ROOT / "index.html"
+    out_path.write_text(body, encoding="utf-8", newline="\n")
 
-    log(f"wrote {len(written)} pages: {', '.join(sorted(set(written)))}")
+    n_removed = remove_stale_locale_html()
+    if n_removed:
+        log(f"removed {n_removed} stale locale *.html files")
+
+    log("wrote index.html (English only)")
     return 0
 
 
