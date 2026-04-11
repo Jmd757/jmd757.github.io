@@ -184,43 +184,56 @@ INLINE_CSS = r"""
       justify-content: flex-start;
     }
     .top-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--muted);
-      margin-inline-end: 0.25rem;
-    }
-    .lang-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem 0.5rem;
-      justify-content: flex-end;
-      list-style: none;
-      margin: 0;
+      position: absolute;
+      width: 1px;
+      height: 1px;
       padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
-    html[dir="rtl"] .lang-links {
-      justify-content: flex-start;
+    .lang-select-wrap {
+      min-width: 0;
+      max-width: 100%;
     }
-    .lang-links a {
-      font-size: 0.75rem;
+    .lang-select {
+      font: inherit;
+      font-size: 0.8125rem;
       font-weight: 600;
-      text-decoration: none;
-      color: var(--text);
-      padding: 0.25rem 0.55rem;
+      padding: 0.45rem 2rem 0.45rem 0.85rem;
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: var(--bg-elev);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      max-width: min(100%, 14rem);
+      width: auto;
+      min-width: 8.5rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M1 1.5L6 6l5-4.5' stroke='%2394a3b8' stroke-width='1.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.65rem center;
+      background-size: 0.65rem auto;
     }
-    .lang-links a:hover {
+    @media (prefers-color-scheme: light) {
+      .lang-select {
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M1 1.5L6 6l5-4.5' stroke='%2364748b' stroke-width='1.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      }
+    }
+    html[dir="rtl"] .lang-select {
+      padding: 0.45rem 0.85rem 0.45rem 2rem;
+      background-position: left 0.65rem center;
+    }
+    .lang-select:hover {
       border-color: var(--muted);
     }
-    .lang-links a:focus-visible {
+    .lang-select:focus-visible {
       outline: 2px solid var(--focus);
-      outline-offset: 2px;
-    }
-    .lang-links a[aria-current="page"] {
-      border-color: var(--security);
-      background: var(--security-bg);
+      outline-offset: 3px;
     }
     .intro-kicker {
       margin: 0 0 0.35rem;
@@ -394,7 +407,8 @@ def render_page(
     heading = html.escape(merged.get("heading") or "", quote=False)
     lead = html.escape(merged.get("lead") or "", quote=False)
     nav_label = html.escape(merged.get("navLabel") or "Phone lines", quote=True)
-    label_lang = html.escape(merged.get("labelLanguage") or "Language", quote=False)
+    label_lang_text = html.escape(merged.get("labelLanguage") or "Language", quote=False)
+    label_lang_attr = html.escape(merged.get("labelLanguage") or "Language", quote=True)
     tap = html.escape(merged.get("tapToCall") or "Tap to call", quote=False)
 
     foot_raw = merged.get("footerNote")
@@ -409,19 +423,15 @@ def render_page(
     dir_attr = "rtl" if is_rtl_locale(loc, rtl_locales) else "ltr"
     lang_attr = html.escape(loc, quote=True)
 
-    lang_items: list[str] = []
+    lang_options: list[str] = []
     sorted_codes = sorted(locale_codes, key=lambda c: (lang_names.get(c) or c).lower())
     for code in sorted_codes:
         href = page_basename(code, default_locale)
         label = html.escape(lang_names.get(code) or code, quote=False)
-        if code == loc:
-            lang_items.append(
-                f'<li><a href="{html.escape(href, quote=True)}" aria-current="page">{label}</a></li>'
-            )
-        else:
-            lang_items.append(
-                f'<li><a href="{html.escape(href, quote=True)}">{label}</a></li>'
-            )
+        val = html.escape(href, quote=True)
+        sel = " selected" if code == loc else ""
+        lang_options.append(f'        <option value="{val}"{sel}>{label}</option>')
+    lang_options_html = "\n".join(lang_options)
 
     cards: list[str] = []
     for L in lines:
@@ -474,10 +484,12 @@ def render_page(
 <body>
   <div class="page">
     <header class="top">
-      <span class="top-label">{label_lang}</span>
-      <ul class="lang-links" aria-label="{label_lang}">
-{chr(10).join("        " + x for x in lang_items)}
-      </ul>
+      <div class="lang-select-wrap">
+        <label class="top-label" for="lang-select">{label_lang_text}</label>
+        <select id="lang-select" class="lang-select" name="lang" autocomplete="off" aria-label="{label_lang_attr}" onchange="var v=this.value;if(v)window.location.href=v;">
+{lang_options_html}
+        </select>
+      </div>
     </header>
     <header class="intro">
       <p class="intro-kicker">{eyebrow}</p>

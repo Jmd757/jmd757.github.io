@@ -4,7 +4,8 @@ GitHub Pages setup for this project
 What the repo contains
 - .nojekyll — disables Jekyll so GitHub serves plain static files (copied into the deploy bundle).
 - tools/render_static_pages.py — reads config/site.json and locales/messages.json, writes index.html
-  (default locale) plus one *.html file per other locale at the repo root. No runtime JavaScript.
+  (default locale) plus one *.html file per other locale at the repo root. Pages use only a tiny
+  inline script on the language select (onchange navigation); no external JS bundles.
 - .github/workflows/pages.yml — runs the renderer, copies all root *.html files, assets/icons/*.svg,
   .nojekyll, and optional _headers into _site, then deploys via GitHub Actions.
 
@@ -39,7 +40,7 @@ Configuration (no hand-editing of generated HTML for content)
 
 - locales/messages.json
   - strings — per-locale UI copy (merged with English as fallback for missing keys).
-  - langNames — labels for the plain link language switcher on each page.
+  - langNames — labels in the language dropdown (native select) on each page.
   - rtlLocales — base language codes that get dir="rtl" on <html>.
 
 Published URLs (project site example)
